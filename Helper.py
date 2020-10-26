@@ -62,6 +62,7 @@ def DataToDict(Tokens):
 def UpdateData():
     PageTokens = FetchPages()
     Data = DataToDict(PageTokens)
+    print('Dati aggiornati')
 
     return Data
 
@@ -80,20 +81,27 @@ def Search(Query = '', Data = OrdDict()): #this function search in the database 
 
 def DisplayResult(Argument = '', Matches = OrdDict()): #this function display the results of queries indented properly
     print(Argument)
-
-    for KeyMatch, ValueMatch in Matches.items(): # loop for every lesson present in the results
-        print('\t', KeyMatch) #proper indentation
-        for KeyArgument, ValueArgument in ValueMatch.items(): #loop for every argument of every lesson
-            print('\t' * 2, KeyArgument, ValueArgument) #proper indentation
+    if len(Matches) > 0: #check if there is some results
+        for KeyMatch, ValueMatch in Matches.items(): # loop for every lesson present in the results
+            print('\t', KeyMatch) #proper indentation
+            for KeyArgument, ValueArgument in ValueMatch.items(): #loop for every argument of every lesson
+                print('\t' * 2, KeyArgument, ValueArgument) #proper indentation
+    else:
+        print('\t', 'Nessun risultato')
 
 if __name__ == '__main__':
     Lessons = UpdateData() #retrieve data
     Prompt = "inserire l'argomento da cercare "
     Note = '(argomenti multipli vanno separati da una virgola e uno spazio: <arg1>, <arg2>)'
     Prompt += Note + ': '
-    print('Dati aggiornati')
-    Queries = input(Prompt).split(', ') #input split to list
+    Queries = input(Prompt)
 
-    for Arg in Queries: #loop for every query
-        Result = Search(Arg, Lessons) #retrieving result out of query
-        DisplayResult(Arg, Result) #displaying the single result
+    if not Queries == '':
+        Queries = Queries.split(', ') #input split to list
+        for Arg in Queries: #loop for every query
+            if not Arg == '':
+                Result = Search(Arg, Lessons) #retrieving result out of query
+                DisplayResult(Arg, Result) #displaying the single result
+
+    else:
+        print('nessuna query inserita')
