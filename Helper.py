@@ -90,6 +90,7 @@ def DisplayResult(Argument = '', Matches = OrdDict()): #this function display th
         print('\t', 'Nessun risultato')
 
 if __name__ == '__main__':
+    print('Benvenuto in Google of Calculus I')
     Lessons = UpdateData() #retrieve data
     Prompt = "inserire l'argomento da cercare "
     Note = '(argomenti multipli vanno separati da una virgola e uno spazio: <arg1>, <arg2>)'
@@ -98,6 +99,7 @@ if __name__ == '__main__':
 
     if not Queries == '':
         Queries = Queries.split(', ') #input split to list
+        Queries = list(set(Queries)) #remove duplicates for Queries
         for Arg in Queries: #loop for every query
             if not Arg == '':
                 Result = Search(Arg, Lessons) #retrieving result out of query
