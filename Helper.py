@@ -1,19 +1,5 @@
 from collections import OrderedDict as OrdDict
-try: # check if needed module is installed
-    from googleapiclient.discovery import build as Activate
-except ImportError: #if not installed python will install it
-    from os import system as Shell
-    Shell('pip install google-api-python-client')
-    try: #try again checking if it's installed
-        from googleapiclient.discovery import build as Activate
-    except ImportError: #if python can not access the module the script will close
-        print('Esegui lo script come admin')
-        quit() #closing python
-
-APIKey = 'AIzaSyA-dlBUjVQeuc4a6ZN4RkNUYDFddrVLxrA' #API Key need to perform the research
-ID = 'PLAQopGWlIcyZlCmXWE_KvtMi57Mwbyf6C' #Playlist ID
-Youtube = Activate('youtube', 'v3', developerKey = APIKey) #activation of youtube service by youtube API Key
-Playlist = Youtube.playlistItems() #playlist of videos
+from googleapiclient.discovery import build as Activate
 
 def FetchPages(): #this function retrieve all the "pages" of video
     Tokens = [None] #token IDs of the palylist pages
@@ -66,6 +52,80 @@ def UpdateData():
 
     return Data
 
+def FetchVideos(): #this function get youtube ids
+    Pages = FetchPages() #fatching all the pages of a playlist
+    VideosID = []
+
+    for Page in Pages: #loop for every page of results
+        Videos = Playlist.list(part='contentDetails', playlistId = ID, maxResults = 50, pageToken = Page) #setting the page
+        Videos = Videos.execute() #request execution
+
+        for Video in Videos['items']: #loop for every video of the playlist
+            VideosID.append(Video['contentDetails']['videoId']) #append video link
+
+    return VideosID
+
+def GetVideoData(ID = ''): #this function get the video metadata given the video id
+    Video = YoutubeAPI.videos().list(part = 'snippet, contentDetails', id = ID) #youtube API video obj
+    Video = Video.execute()['items'][0] # video metadata
+    Title = Video['snippet']['title'] #video title
+    Duration = Video['contentDetails']['duration'][2 : - 1] #removing useless part of duration
+    Duration = Duration.replace('H', ':').replace('M', ':') #formatting correctly the duration as timestamps
+    DescriptionList = [Line.split() for Line in Video['snippet']['description'].split('\n')[3 :]] #splitting the description in lines
+    Description = OrdDict() #ordered dictionary of description
+
+    for Line in range(len(DescriptionList)): #for loop for every line of the description
+        if not Line == len(DescriptionList) - 1: #check if is not the last
+            Value = [DescriptionList[Line][0], DescriptionList[Line + 1][0]] #timestamps
+        else: #last line
+            Value = [DescriptionList[Line][0], Duration] #timestamps
+
+        Key = ' '.join(DescriptionList[Line][1:]) #argument as string
+        Description[Key] = Value #argument title (key) timestamps (value)
+
+    VideoMetaData =\
+    {
+        'Link' : YoutubePrefix + ID,
+        'Title' : Title, #title of the video (string)
+        'Duration' :Duration, # duration HH:MM:SS (string)
+        'Description' : Description # description (string : list of timestamps)(OrdDict)
+    }
+
+    return VideoMetaData
+
+def GetPlaylistData(): #retrive all the data of the videos
+    PlaylistData = [] #list for all the videos
+
+    for ID in VideoIDs: #for loop for every video
+        PlaylistData.append(GetVideoData(ID)) #appending the data for every video
+
+    return PlaylistData
+
+def SearchData(Query = '', Data = []): #this function search between the data of the videos
+    Matches = OrdDict() #ordered dictionary of results
+
+    for Lesson in Data: #for loop for every lesson in the database
+        Argument = OrdDict() #dictionary for every line of the lesson description
+        for Key, Value in Lesson['Description'].items(): #for loop for every line of the description
+            if Query.lower() in Key.lower(): #check if the query is in the line of the description
+                Argument[Key] = Value #set the argument (key) and the timestamps (value)
+        if len(Argument) > 0: #check if the result in the lesson is not empty
+            Argument['Link'] = Lesson['Link'] #link of the video lesson
+            Matches[Lesson['Title']] = Argument #set the title of the video lesson (key) and the result(argument)
+
+    return Matches
+
+def DisplayQuery(Query = '', Data = OrdDict()): #this function display the result in the proper way
+    print(Query)
+    if len(Data) > 0: #check if there is some result
+        for Lesson, Arguments in Data.items(): #for loop for lesson with result
+            print('\t', Lesson)
+            for Argument, Timestamps in Arguments.items(): #for loop for every result of the lesson
+                if not Argument == 'Link': #print all the result except the link
+                    print('\t' * 2, Argument, Timestamps)
+    else: #case of no result
+        print('\t', 'Nessun risultato')
+
 def Search(Query = '', Data = OrdDict()): #this function search in the database and filter properly the result
     Matches = OrdDict() #ordered dictionary of results
 
@@ -89,9 +149,17 @@ def DisplayResult(Argument = '', Matches = OrdDict()): #this function display th
     else:
         print('\t', 'Nessun risultato')
 
+APIKey = 'AIzaSyA-dlBUjVQeuc4a6ZN4RkNUYDFddrVLxrA' #API Key need to perform the research
+ID = 'PLAQopGWlIcyZlCmXWE_KvtMi57Mwbyf6C' #Playlist ID
+YoutubeAPI = Activate('youtube', 'v3', developerKey = APIKey) #activation of youtube service by youtube API Key
+YoutubePrefix = 'https://www.youtube.com/watch?v='
+Playlist = YoutubeAPI.playlistItems() #playlist of videos
+VideoIDs = FetchVideos()[1: ]
+VideoLinks = [YoutubePrefix + ID for ID in VideoIDs] #youtube video links
+
 if __name__ == '__main__':
     print('Benvenuto in Google of Calculus I')
-    Lessons = UpdateData() #retrieve data
+    Lessons = GetPlaylistData() #retrieve data of all videos
     Prompt = "inserire l'argomento da cercare "
     Note = '(argomenti multipli vanno separati da una virgola e uno spazio: <arg1>, <arg2>)'
     Prompt += Note + ': '
@@ -102,8 +170,8 @@ if __name__ == '__main__':
         Queries = list(set(Queries)) #remove duplicates for Queries
         for Arg in Queries: #loop for every query
             if not Arg == '':
-                Result = Search(Arg, Lessons) #retrieving result out of query
-                DisplayResult(Arg, Result) #displaying the single result
+                Result = SearchData(Arg, Lessons) #retrieving result out of query
+                DisplayQuery(Arg, Result) #displaying the single result
 
     else:
         print('nessuna query inserita')
