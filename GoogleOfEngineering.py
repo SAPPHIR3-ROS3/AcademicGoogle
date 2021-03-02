@@ -1,5 +1,6 @@
 from collections import OrderedDict as OrdDict
 from googleapiclient.discovery import build as Activate
+from re import search
 
 APIKey = 'AIzaSyA-dlBUjVQeuc4a6ZN4RkNUYDFddrVLxrA' #API Key need to perform the research
 YoutubeAPI = Activate('youtube', 'v3', developerKey = APIKey) #activation of youtube service by youtube API Key
@@ -53,24 +54,24 @@ def GetVideoData(ID = ''): #this function get the video metadata given the video
     Title = Video['snippet']['title'] #video title
     Duration = Video['contentDetails']['duration'][2 : - 1] #removing useless part of duration
     Duration = Duration.replace('H', ':').replace('M', ':') #formatting correctly the duration as timestamps
-    DescriptionList = [Line.split() for Line in Video['snippet']['description'].split('\n')[3 :]] #splitting the description in lines
+    DescriptionList = [Line.strip() for Line in Video['snippet']['description'].split('\n')] #splitting the description in lines
     Description = OrdDict() #ordered dictionary of description
-
-    for Line in range(len(DescriptionList)): #for loop for every line of the description
-        if not Line == len(DescriptionList) - 1: #check if is not the last
-            Value = [DescriptionList[Line][0], DescriptionList[Line + 1][0]] #timestamps
-        else: #last line
-            Value = [DescriptionList[Line][0], Duration] #timestamps
-
-        Key = ' '.join(DescriptionList[Line][1:]) #argument as string
-        Description[Key] = Value #argument title (key) timestamps (value)
+    ####r'(\d{2}:\d{2}(:\d{2})?)\s(.+)' to use in the description
+    # for Line in range(len(DescriptionList)): #for loop for every line of the description
+    #     if not Line == len(DescriptionList) - 1: #check if is not the last
+    #         Value = [DescriptionList[Line][0], DescriptionList[Line + 1][0]] #timestamps
+    #     else: #last line
+    #         Value = [DescriptionList[Line][0], Duration] #timestamps
+    #
+    #     Key = ' '.join(DescriptionList[Line][1:]) #argument as string
+    #     Description[Key] = Value #argument title (key) timestamps (value)
 
     VideoMetaData =\
     {
         'Link' : YoutubePrefix + ID,
         'Title' : Title, #title of the video (string)
         'Duration' :Duration, # duration HH:MM:SS (string)
-        'Description' : Description # description (string : list of timestamps)(OrdDict)
+        'Description' : DescriptionList # description (string : list of timestamps)(OrdDict)
     }
 
     return VideoMetaData
@@ -134,7 +135,8 @@ if __name__ == '__main__':
         for Att in Video:
             if Att == 'Description':
                 for i in Video[Att]:
-                    print(i,  ':', Video[Att][i])
+                    #print(i,  ':', Video[Att][i])
+                    print(i)
             else:
                 print(Att, ':', Video[Att])
 
