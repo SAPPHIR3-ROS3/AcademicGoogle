@@ -57,15 +57,6 @@ def GetVideoData(ID = ''): #this function get the video metadata given the video
     DescriptionList = [Line.strip() for Line in Video['snippet']['description'].split('\n')] #splitting the description in lines
     RawDescription = Video['snippet']['description']
     Timestamps = r'(\d{1,2}:\d{2}:\d{2}|\d{2}:\d{2})\s(.+)'
-    ####r'(\d{2}:\d{2}(:\d{2})?)\s(.+)' to use in the description
-    # for Line in range(len(DescriptionList)): #for loop for every line of the description
-    #     if not Line == len(DescriptionList) - 1: #check if is not the last
-    #         Value = [DescriptionList[Line][0], DescriptionList[Line + 1][0]] #timestamps
-    #     else: #last line
-    #         Value = [DescriptionList[Line][0], Duration] #timestamps
-    #
-    #     Key = ' '.join(DescriptionList[Line][1:]) #argument as string
-    #     Description[Key] = Value #argument title (key) timestamps (value)
 
     Description = [list(Line)[:: - 1] for Line in findall(Timestamps, str(RawDescription))]
 
