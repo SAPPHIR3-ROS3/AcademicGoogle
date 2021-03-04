@@ -1,6 +1,6 @@
 from collections import OrderedDict as OrdDict
 from googleapiclient.discovery import build as Activate
-from re import findall
+from re import finditer
 
 APIKey = 'AIzaSyA-dlBUjVQeuc4a6ZN4RkNUYDFddrVLxrA' #API Key need to perform the research
 YoutubeAPI = Activate('youtube', 'v3', developerKey = APIKey) #activation of youtube service by youtube API Key
@@ -53,12 +53,15 @@ def GetVideoData(ID = ''): #this function get the video metadata given the video
     Video = Video.execute()['items'][0] # video metadata
     Title = Video['snippet']['title'] #video title
     Duration = Video['contentDetails']['duration'][2 : - 1] #removing useless part of duration
-    Duration = Duration.replace('H', ':').replace('M', ':') #formatting correctly the duration as timestamps
+    Duration = Duration.replace('H', ':').replace('M', ':') #formatting correctly the duration of timestamp
+    Duration = ':'.join([Part if len(Part) > 1 else '0' + Part for Part in Duration.split(':')]) #setting proper length of timestamps segment
     DescriptionList = [Line.strip() for Line in Video['snippet']['description'].split('\n')] #splitting the description in lines
-    RawDescription = Video['snippet']['description']
-    Timestamps = r'(\d{1,2}:\d{2}:\d{2}|\d{2}:\d{2})\s(.+)'
+    RawDescription = str(Video['snippet']['description'])
+    Timestamps = r'(?=(\d{1,2}:\d{2}:\d{2}|\d{2}:\d{2})\s(.+)\n?(\d{1,2}:\d{2}:\d{2}|\d{2}:\d{2})?)' #regex to find start timestamp, argument 
 
-    Description = [list(Line)[:: - 1] for Line in findall(Timestamps, str(RawDescription))]
+    Description = [[Group if not Group == None else Duration for Group in Line.groups()] for Line in finditer(Timestamps, RawDescription)]
+    #formatting in a list properly the matches (timestamps and argument)
+    Description = [(Group[1], Group[0], Group[2]) for Group in Description][: - 1] #correcting the order of sublistand removing last(dupelicate)
 
     VideoMetaData =\
     {
@@ -119,7 +122,7 @@ def DisplayResult(Argument = '', Matches = OrdDict()): #this function display th
         print('\t', 'Nessun risultato')
 
 if __name__ == '__main__':
-    PLID = Courses['Web Information Retraial']
+    PLID = Courses['Analisi Matematica I']
 
     VideoIDs = GetVideoIDs(PLID)
 
@@ -130,8 +133,9 @@ if __name__ == '__main__':
             if Att == 'Description':
                 for i in Video[Att]:
                     #print(i,  ':', Video[Att][i])
-                    #print(i)
-                    print(i[0], ':', i[1])
+                    print(i)
+                    #print(i[0], ':', i[1])
+                    #print('')
             else:
                 print(Att, ':', Video[Att])
             # print(Att, ':', Video[Att])
