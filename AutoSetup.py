@@ -1,6 +1,6 @@
 from subprocess import check_output as Shell
 
-Dependencies = {'googleAPI' : 'googleAPI'}
+Dependencies = {'googleAPI' : 'googleAPI', 'Pillow': 'Pillow'}
 
 CEnd = '\033[0m'
 ErrorText = lambda S: '\33[31m' + S + CEnd
