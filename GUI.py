@@ -1,10 +1,12 @@
 from math import ceil as Ceil
+from PIL.ImageTk import PhotoImage as PilImg
 from tkinter import Tk as App
 from tkinter import Label as Label
 from tkinter import Frame as Page
 from tkinter import PhotoImage as Photo
 from tkinter import StringVar as VarString
 from time import sleep as Sleep
+from urllib.request import urlopen as URL
 
 class Uniflix(App): # main class of the app
     def __init__(self,  *args, **kwargs):
@@ -117,7 +119,11 @@ class Start(Page): #class for the starting animation page
 
 class Home(Page): #main class of the main page of the app
     def __init__(self,  *args, **kwargs):
-        pass
+        self.Parent = Parent #setting parent attribute
+        self.Name = 'Home' #setting name
+        super().__init__(Parent, *args, **kwargs) #calling the init method of super class page
+        self.bg = '#000000' #background
+
 
 if __name__ == '__main__':
     App = Uniflix()
