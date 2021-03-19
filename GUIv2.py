@@ -62,7 +62,7 @@ class Start(Widget):
         self.Layout.addWidget(self.Logo, 0, 0)
         self.setLayout(self.Layout)
 
-    def Animate():
+    def Animate(self):
         FPS = 60.0 #unit for frames in a second
         FrameTime = 1.0/FPS #unit of single frame
 
