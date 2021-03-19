@@ -1,2 +1,2 @@
-# UniMaterialHelper
-Trova qualsiasi elemento presente nel Corso di Analisi I (Prof Camilli)
+# Uniflix
+Trova qualsiasi elemento presente nei corsi universitari
