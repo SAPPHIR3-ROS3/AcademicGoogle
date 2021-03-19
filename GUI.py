@@ -1,20 +1,26 @@
 from math import ceil as Ceil
 from PIL.Image import new as Gen
 from PIL.ImageTk import PhotoImage as PilImg
+################################################################################
 from tkinter import Tk as App
 from tkinter import Button as Button
+from tkinter import Canvas as Canvas
 from tkinter import Label as Label
 from tkinter import Frame as Page
 from tkinter import PhotoImage as Photo
+from tkinter import Scrollbar as SideBar
 from tkinter import StringVar as VarString
+################################################################################
 from time import sleep as Sleep
 from urllib.request import urlopen as URL
 
+######Tkinter###################################################################
 class Uniflix(App): # main class of the app
     Name = 'UNIFLIX'
     Colors =\
     {
         'bg' : '#000000',
+        'lightbg' : '#221f1f',
         'fg' : '#E50914',
         'text' : '#FFFFFF'
     }#color of the app
@@ -25,9 +31,10 @@ class Uniflix(App): # main class of the app
         Logo = URL('https://upload.wikimedia.org/wikipedia/en/4/45/Sapienza_University_of_Rome.png').read() #raw data of the logo
         self.Icon = PilImg(data = Logo) #logo
         self.iconphoto(True, self.Icon) #window icon
-        self.title(self.Title)
-        #self.geometry('1280x720+800+0')
-        self.wm_state('zoomed')
+        self.title(self.Title) #setting the title
+        self.minsize(1280, 720) #setting the minimum size of the window
+        self.geometry('1280x720+800+0')
+        #self.wm_state('zoomed')
 
         self.Screens =\
         {
@@ -137,6 +144,25 @@ class Start(Page): #class for the starting animation page
             self.update() #updating the frame
             Sleep(FrameTime) #waitng "a frame"
 
+class ScrollableFrame(Page):
+    Items = dict()
+
+    def __init__(self, Parent,*args, **kwargs):
+        super().__init__(Parent, *args, **kwargs)
+        self.ViewRegion = Canvas(self)
+
+        self.Bar = SideBar(self)
+        self.Bar.config(orient = 'vertical')
+        self.Bar.config(command = self.ViewRegion.yview)
+
+        self.ScrollFrame = Frame(self.ViewRegion)
+        self.ScrollFrame.bind('<Configure>', lambda Event: self.ViewRegion.configure(scrollregion = self.ViewRegion.bbox('all')))
+        self.ViewRegion.create_window((0,0), window = self.ScrollFrame, anchor='nw')
+        self.ViewRegion.config(yscrollcommand = self.Bar.set)
+
+    def Add(self, Name,Widget, *args, **kwargs):
+        Items[Name] = Widget(self.ScrollFrame)
+
 class NavigationBar(Page): #class of top navigation bar (menu button, logo, search button)
     Name = 'NavigationBar'
 
@@ -149,6 +175,8 @@ class NavigationBar(Page): #class of top navigation bar (menu button, logo, sear
 
         self.Menu = Button(self) #generating a button to trigger side menu
         self.Menu.config(borderwidth = 0) #setting the button with no border
+        self.Menu.config(compound="c") #setting the image sentered
+        self.Menu.config(relief = 'flat')
         self.Menu.place \
         (
             anchor = 'nw',
@@ -158,6 +186,8 @@ class NavigationBar(Page): #class of top navigation bar (menu button, logo, sear
 
         self.Search = Button(self) #generating the button of the search
         self.Search.config(borderwidth = 0) #setting the button with no border
+        self.Search.config(compound="c") #setting the image sentered
+        self.Search.config(relief = 'flat')
         self.Search.place \
         (
             anchor = 'ne',
@@ -166,7 +196,10 @@ class NavigationBar(Page): #class of top navigation bar (menu button, logo, sear
         ) #placing the search button top right
 
     def PlaceMoreWidgets(self): #this method generate and place additional widgets that can not be placed or completely used in the costructor
-        self.MenuIMG = PilImg(Gen('RGB', (self.winfo_height() - 10, self.winfo_height() - 10), (255, 0, 0))) #generating a square image as bg of the button #temporary
+        Padding = 2
+        Dim = (self.winfo_height() - Padding, self.winfo_height() - Padding)
+
+        self.MenuIMG = PilImg(Gen('RGB', Dim, (255, 0, 0))) #generating a square image as bg of the button #temporary
         self.Menu.config(image = self.MenuIMG) #setting the image as button background
 
         self.LogoLabel = Label(self) #generating the logo
@@ -178,12 +211,22 @@ class NavigationBar(Page): #class of top navigation bar (menu button, logo, sear
         (
             anchor = 'nw',
             x = self.MenuIMG.width() + 10,
-            rely = 0,
+            rely = 0.01,
             relheight = 1
         ) #placing the logo right after the menu button
 
-        self.SearchIMG = PilImg(Gen('RGB',(self.winfo_height() - 10, self.winfo_height() - 10), (0, 0, 255))) #generating a square image as bg of the button #temporary
+        self.SearchIMG = PilImg(Gen('RGB', Dim, (0, 0, 255))) #generating a square image as bg of the button #temporary
         self.Search.config(image = self.SearchIMG) #setting the image as button background
+
+        self.Parent.after(100, self.PlaceMoreWidgets)
+
+class SideMenu(Page):
+    Name = 'SideMenu'
+    IsActive = False
+
+    def __init__(self, Parent, *args, **kwargs):
+        super().__init__(Parent, *args, **kwargs)
+        self.bg = Uniflix.Colors['lightbg']
 
 class Home(Page): #main class of the main page of the app
     Name = 'Home' #setting name
@@ -210,8 +253,9 @@ class Home(Page): #main class of the main page of the app
         self.NavBar.PlaceMoreWidgets() #placing the additiona widget of NavBar
         self.Parent.update() #updating the window
 
-
+################################################################################
 
 if __name__ == '__main__':
-    App = Uniflix()
-    App.mainloop()
+    pass
+    #App = Uniflix()
+    # App.mainloop()
