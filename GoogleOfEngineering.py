@@ -122,21 +122,24 @@ def DisplayResult(Argument = '', Matches = OrdDict()): #this function display th
         print('\t', 'Nessun risultato')
 
 if __name__ == '__main__':
-    PLID = Courses['Analisi Matematica I']
+    PLID = Courses['Fisica 1-2']
 
     VideoIDs = GetVideoIDs(PLID)
+    Lessons = [GetVideoData(ID) for ID in VideoIDs]
 
-    for ID in VideoIDs:
-        Video = GetVideoData(ID)
+    # for ID in VideoIDs:
+    #     Video = GetVideoData(ID)
+    #
+    #     for Att in Video:
+    #         if Att == 'Description':
+    #             for i in Video[Att]:
+    #                 #print(i,  ':', Video[Att][i])
+    #                 print(i)
+    #                 #print(i[0], ':', i[1])
+    #                 #print('')
+    #         else:
+    #             print(Att, ':', Video[Att])
+    #         # print(Att, ':', Video[Att])
+    #     print()
 
-        for Att in Video:
-            if Att == 'Description':
-                for i in Video[Att]:
-                    #print(i,  ':', Video[Att][i])
-                    print(i)
-                    #print(i[0], ':', i[1])
-                    #print('')
-            else:
-                print(Att, ':', Video[Att])
-            # print(Att, ':', Video[Att])
-        print()
+
