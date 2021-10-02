@@ -1,14 +1,14 @@
 from subprocess import check_output as Shell
 
-Dependencies = {'googleAPI' : 'googleAPI', 'Pillow': 'Pillow'}
+Dependencies = {'googleAPI' : 'googleAPI'} # dependencies need to run the program
 
-CEnd = '\033[0m'
-ErrorText = lambda S: '\33[31m' + S + CEnd
-WarningText = lambda S: '\33[33m' + S + CEnd
-OKText = lambda S: '\33[92m' + S + CEnd
+CEnd = '\033[0m' # end of coloured text
+ErrorText = lambda S: f'\33[31m{S}{CEnd}' #function for errors (red text)
+WarningText = lambda S: f'\33[33m{S}{CEnd}' #function for warnings (yellow text)
+OKText = lambda S: f'\33[92m{S}{CEnd}' #function for success operations (green text)
 
-def CheckDependencies():
-    ModulesList= [i.decode() for i in Shell('pip list', shell = True).split()][4 :]
+def CheckDependencies(): # function to check all the needd dependencies in the script
+    ModulesList= [i.decode() for i in Shell('pip list', shell = True).split()][4 :] #
     Modules = [ModulesList[i] for i in range(len(ModulesList)) if i % 2 == 0]
     Versions = [ModulesList[i] for i in range(len(ModulesList)) if i % 2 == 1]
     ModuleString = ' '.join([i.replace('-', '') + '==' + j for i,j in zip(Modules,Versions)])
@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
             print(WarningText('It SHOULD be all set'))
             print(OKText('Restart this program to test it out'))
-            print(WarningText("(Try running as Administrator if it doesn't work)"))
+            print(WarningText("(Try running as Administrator if tha script did not work properly)"))
 
         elif UInput.lower() == 'n':
             print(WarningText('copy and paste the following commands in cmd/powershell/terminal'))
