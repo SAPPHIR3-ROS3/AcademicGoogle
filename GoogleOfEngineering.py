@@ -61,7 +61,7 @@ def GetVideoData(ID = ''): #this function get the video metadata given the video
 
     Description = [[Group if not Group == None else Duration for Group in Line.groups()] for Line in finditer(Timestamps, RawDescription)]
     #formatting in a list properly the matches (timestamps and argument)
-    Description = [(Group[1], Group[0], Group[2]) for Group in Description][: - 1] #correcting the order of sublistand removing last(dupelicate)
+    Description = [(Group[1], Group[0], Group[2]) for Group in Description][: - 1] #correcting the order of sublist and removing last(dup licate)
 
     VideoMetaData =\
     {
@@ -129,17 +129,19 @@ if __name__ == '__main__':
 
     # for ID in VideoIDs:
     #     Video = GetVideoData(ID)
-    #
-    #     for Att in Video:
-    #         if Att == 'Description':
-    #             for i in Video[Att]:
-    #                 #print(i,  ':', Video[Att][i])
-    #                 print(i)
-    #                 #print(i[0], ':', i[1])
-    #                 #print('')
-    #         else:
-    #             print(Att, ':', Video[Att])
-    #         # print(Att, ':', Video[Att])
-    #     print()
+    #     print(Video)
+    #     # for Att in Video:
+    #     #     if Att == 'Description':
+    #     #         for i in Video[Att]:
+    #     #             #print(i,  ':', Video[Att][i])
+    #     #             print(i)
+    #     #             #print(i[0], ':', i[1])
+    #     #             #print('')
+    #     #     else:
+    #     #         print(Att, ':', Video[Att])
+    #     #     # print(Att, ':', Video[Att])
+    #     # print()
 
+    for Key, Value in Lessons[2].items():
 
+        print(f'{Key} : {Value}')
