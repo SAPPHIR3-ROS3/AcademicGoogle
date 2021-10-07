@@ -141,7 +141,7 @@ if __name__ == '__main__':
     #     #         print(Att, ':', Video[Att])
     #     #     # print(Att, ':', Video[Att])
     #     # print()
-
-    for Key, Value in Lessons[2].items():
-
-        print(f'{Key} : {Value}')
+    #
+    # for Key, Value in Lessons[2].items():
+    #
+    #     print(f'{Key} : {Value}')
