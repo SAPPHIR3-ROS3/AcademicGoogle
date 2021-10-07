@@ -3,3 +3,4 @@
 /PyUniflix/
 *.log
 out*.txt
+Data.db
