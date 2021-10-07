@@ -47,7 +47,7 @@ def CreateDatabase(): #this function create the database with timestamps from sc
     print(OKText('Courses table created'))
     for Course, PLID in Courses.items(): # loop for filling the courses table
         DBShell.execute('INSERT INTO Courses VALUES (:PLID, :CourseName)', {'PLID' : PLID, 'CourseName' : Course}) #secured execution of the query to insert value from
-    print('Courses table filled')
+    print(OKText('Courses table filled'))
 
 
     DBShell.execute\
