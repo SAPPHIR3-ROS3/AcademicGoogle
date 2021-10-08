@@ -1,5 +1,5 @@
 # Google of Enginering
-Trova qualsiasi elemento presente nei corsi universitari sul canale del DIAG
+Trova qualsiasi elemento presente nei corsi universitari sul canale youtube del DIAG
 
 ## Prerequisiti
 * ultima versione di [python 3](https://www.python.org/)
