@@ -66,10 +66,10 @@ def GetVideoData(ID = ''): #this function get the video metadata given the video
     return VideoMetaData
 
 def DisplayQuery(Data = None): #this function display the result in the proper way
-    #print(f'{sum([len(Data[Query]) for Query in Data])} risultati trovati')
+    print(f'{sum([len(Data[Query]) for Query in Data])} risultati trovati')
     if Data is not None:
         for Key, Matches in Data.items():
-            print(Key)
+            print(Key, '\n')
             for Match in Matches:
                 print(f'\t[{Match["Course"]}] {Match["VideoTitle"]}')
                 print(Link(f'\t{Match["VideoLink"]}'))
