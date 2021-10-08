@@ -1,4 +1,5 @@
 from collections import OrderedDict as OrdDict
+from DBManagement import SearchInDatabase
 from googleapiclient.discovery import build as Activate
 from re import finditer
 
@@ -7,21 +8,12 @@ YoutubeAPI = Activate('youtube', 'v3', developerKey = APIKey) #activation of you
 Playlist = YoutubeAPI.playlistItems() #playlist of videos
 YoutubePrefix = 'https://www.youtube.com/watch?v='
 
-Courses =\
-{
-'Analisi Matematica I' : 'PLAQopGWlIcyZlCmXWE_KvtMi57Mwbyf6C',
-'Informatica I: Python' : 'PLAQopGWlIcyaYO89pmFViY4z_y8lj2IQA',
-'Informatica I: Modelli' : 'PLAQopGWlIcyalkb2baN9mnotsdBm5Vbkc',
-'Fisica 1-2' : 'PLAQopGWlIcyYqImhBYHb6ffUiLx6HyVAv',
-'Sistemi di Calcolo' : 'PLAQopGWlIcybT12h7fjVvlGAeSqOKDnTA',
-'Robotics I' : 'PLAQopGWlIcyaqDBW1zSKx7lHfVcOmWSWt',
-'Robotics II' : 'PLAQopGWlIcya6LnIF83QlJTqvpYmJXnDm',
-'Tecniche di Programmazione' : 'PLAQopGWlIcybv3YLRHGS4yZR00X3RvSBm',
-'Ricerca Operativa' : 'PLAQopGWlIcyZankm1hHCSOdBilSGC3Svg',
-'Basi di Dati' : 'PLAQopGWlIcyZ7CN1sefdnCusfoodLP931',
-'Statistica' : 'PLAQopGWlIcyYS5uAXk6M6lD2uXW2_dnCG',
-'Web Information Retraial' : 'PLAQopGWlIcya-9yzQ8c8UtPOuCv0mFZkr'
-}
+CEnd = '\033[0m' # end of coloured text
+ErrorText = lambda S: f'\33[31m{S}{CEnd}' #function for errors (red text)
+WarningText = lambda S: f'\33[33m{S}{CEnd}' #function for warnings (yellow text)
+OKText = lambda S: f'\33[92m{S}{CEnd}' #function for success operations (green text)
+Link = lambda S: f'\33[90m{S}{CEnd}'
+
 
 def GetVideoIDs(PlaylistID = ''): #this function get youtube ids
     Pages = [None] #token IDs of the playlist pages
@@ -73,6 +65,23 @@ def GetVideoData(ID = ''): #this function get the video metadata given the video
 
     return VideoMetaData
 
+def DisplayQuery(Data = None): #this function display the result in the proper way
+    #print(f'{sum([len(Data[Query]) for Query in Data])} risultati trovati')
+    if Data is not None:
+        for Key, Matches in Data.items():
+            print(Key)
+            for Match in Matches:
+                print(f'\t[{Match["Course"]}] {Match["VideoTitle"]}')
+                print(Link(f'\t{Match["VideoLink"]}'))
+                print('\t...')
+                print(OKText(f'\t[{Match["StartTimestamp"]}|{Match["EndTimestamp"]}] {Match["TimestampDescription"].replace("   ", " ")}'))
+                print('\t...')
+                print('\t'+'-' * 110)
+    else:
+        print(ErrorText('Nessun risultato'))
+
+# LEGACY
+
 def SearchData(Query = '', Data = []): #this function search between the data of the videos
     Matches = OrdDict() #ordered dictionary of results
 
@@ -86,17 +95,6 @@ def SearchData(Query = '', Data = []): #this function search between the data of
             Matches[Lesson['Title']] = Argument #set the title of the video lesson (key) and the result(argument)
 
     return Matches
-
-def DisplayQuery(Query = '', Data = OrdDict()): #this function display the result in the proper way
-    print(Query)
-    if len(Data) > 0: #check if there is some result
-        for Lesson, Arguments in Data.items(): #for loop for lesson with result
-            print('\t', Lesson)
-            for Argument, Timestamps in Arguments.items(): #for loop for every result of the lesson
-                if not Argument == 'Link': #print all the result except the link
-                    print('\t' * 2, Argument, Timestamps)
-    else: #case of no result
-        print('\t', 'Nessun risultato')
 
 def Search(Query = '', Data = OrdDict()): #this function search in the database and filter properly the result
     Matches = OrdDict() #ordered dictionary of results
@@ -122,26 +120,30 @@ def DisplayResult(Argument = '', Matches = OrdDict()): #this function display th
         print('\t', 'Nessun risultato')
 
 if __name__ == '__main__':
-    PLID = Courses['Fisica 1-2']
+    Title =\
+    """
 
-    VideoIDs = GetVideoIDs(PLID)
-    Lessons = [GetVideoData(ID) for ID in VideoIDs]
+░██████╗░░█████╗░░█████╗░░██████╗░██╗░░░░░███████╗  ░█████╗░███████╗
+██╔════╝░██╔══██╗██╔══██╗██╔════╝░██║░░░░░██╔════╝  ██╔══██╗██╔════╝
+██║░░██╗░██║░░██║██║░░██║██║░░██╗░██║░░░░░█████╗░░  ██║░░██║█████╗░░
+██║░░╚██╗██║░░██║██║░░██║██║░░╚██╗██║░░░░░██╔══╝░░  ██║░░██║██╔══╝░░
+╚██████╔╝╚█████╔╝╚█████╔╝╚██████╔╝███████╗███████╗  ╚█████╔╝██║░░░░░
+░╚═════╝░░╚════╝░░╚════╝░░╚═════╝░╚══════╝╚══════╝  ░╚════╝░╚═╝░░░░░
 
-    # for ID in VideoIDs:
-    #     Video = GetVideoData(ID)
-    #     print(Video)
-    #     # for Att in Video:
-    #     #     if Att == 'Description':
-    #     #         for i in Video[Att]:
-    #     #             #print(i,  ':', Video[Att][i])
-    #     #             print(i)
-    #     #             #print(i[0], ':', i[1])
-    #     #             #print('')
-    #     #     else:
-    #     #         print(Att, ':', Video[Att])
-    #     #     # print(Att, ':', Video[Att])
-    #     # print()
-    #
-    # for Key, Value in Lessons[2].items():
-    #
-    #     print(f'{Key} : {Value}')
+███████╗███╗░░██╗░██████╗░██╗███╗░░██╗███████╗███████╗██████╗░██╗███╗░░██╗░██████╗░
+██╔════╝████╗░██║██╔════╝░██║████╗░██║██╔════╝██╔════╝██╔══██╗██║████╗░██║██╔════╝░
+█████╗░░██╔██╗██║██║░░██╗░██║██╔██╗██║█████╗░░█████╗░░██████╔╝██║██╔██╗██║██║░░██╗░
+██╔══╝░░██║╚████║██║░░╚██╗██║██║╚████║██╔══╝░░██╔══╝░░██╔══██╗██║██║╚████║██║░░╚██╗
+███████╗██║░╚███║╚██████╔╝██║██║░╚███║███████╗███████╗██║░░██║██║██║░╚███║╚██████╔╝
+╚══════╝╚═╝░░╚══╝░╚═════╝░╚═╝╚═╝░░╚══╝╚══════╝╚══════╝╚═╝░░╚═╝╚═╝╚═╝░░╚══╝░╚═════╝░
+
+    """
+    print(OKText(Title))
+    UInput = input('Cerca: ')
+
+    if len(UInput) > 0:
+        UInput = [Query[1 :] if Query.startswith(' ') else Query for Query in UInput.lower().split(',')]
+        Matches = SearchInDatabase(list(set(UInput)))
+        DisplayQuery(Matches)
+    else:
+        print(ErrorText('no results, empty query'))
