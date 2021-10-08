@@ -172,11 +172,9 @@ def SearchInDatabase(Queries = None): # this fucntion query in the database to f
                 VideoLink
                 FROM Timestamps WHERE TimestampDescription LIKE '%'||:Query||'%'
                 ORDER BY Course"""
-                print(Selection)
                 DBShell.execute(Selection, {'Query' : Query}) # query in database to find result ordered by relevance and chronological order
                 QueryResult = DBShell.fetchall() # saving the result
                 QueryKeys = ['Course', 'VideoTitle', 'StartTimestamp', 'EndTimestamp', 'TimestampDescription', 'VideoLink'] # keys of the dictionary (not to deal with indexes)
-                print(len(QueryResult))
                 Results[Query] = [{Key : Value for Key, Value in zip(QueryKeys, Match)} for Match in QueryResult] # transforming result in a better format
                 # dictionary of queries as keys and an ordered list of dictionaries which rappresents a match as values
 
