@@ -24,4 +24,5 @@ Trova qualsiasi elemento presente nei corsi universitari sul canale del DIAG
     ```console
     python3 GoogleOfEngineering.py
     ```
-  * una volta avviato il programma digitare gli argomenti a cui si è interessati (es. Integrali, Limiti ecc.) separati da una virgola (<arg1>, <arg2>, ...)
+  * una volta avviato il programma digitare gli argomenti a cui si è interessati (es. Integrali, Limiti ecc.) separati da una virgola (arg1, arg2, ...)
+  * gli argomenti verranno suddivisi per query e per corso
