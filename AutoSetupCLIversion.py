@@ -45,19 +45,9 @@ if __name__ == '__main__':
             print(ErrorText('invalid imput'))
             print(ErrorText('exiting'))
             quit()
-
-        UInput = input('do you want to create a local database (faster research more memorry required)? <y/n> ')
-
-        if UInput.lower() == 'y':
-            from DBManagement import CreateDatabase
-            CreateDatabase()
-
-            print(WarningText('It SHOULD be all set'))
-            print(OKText('Restart this program to test it out'))
-            print(WarningText("(Try running as Administrator if tha script did not work properly)"))
-
-        elif UInput.lower() == 'n':
-            print('you can create database anytime with "python DBManagement.py -c" or "python3 DBManagement.py -c"')
+            
+        from DBManagement import CreateDatabase
+        CreateDatabase()
 
         else:
             print(ErrorText('invalid imput'))
