@@ -178,7 +178,7 @@ def SearchInDatabase(Queries = None): # this fucntion query in the database to f
                 Results[Query] = [{Key : Value for Key, Value in zip(QueryKeys, Match)} for Match in QueryResult] # transforming result in a better format
                 # dictionary of queries as keys and an ordered list of dictionaries which rappresents a match as values
 
-            return Results if len(Results) > 0 else None
+            return Results
 
 if __name__ == '__main__':
     if len(Args) == 1:
