@@ -6,7 +6,7 @@ Trova qualsiasi elemento presente nei corsi universitari sul canale youtube del 
   * modulo googleAPI
 
 ## Istruzioni d'uso
-* Setup
+* Setup (eseguire come amministratore)
   * su Windows nel prompt dei comandi
     ```console
     python AutoSetupCLIversion.py
