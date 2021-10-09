@@ -79,8 +79,12 @@ def DisplayQuery(Data = None): #this function display the result in the proper w
                     print(OKText(f'\t[{Match["StartTimestamp"]}|{Match["EndTimestamp"]}] {Match["TimestampDescription"].replace("   ", " ")}'))
                     print('\t...')
                     print('\t'+'-' * 110)
+
         else:
             print(ErrorText('Nessun risultato'))
+
+    else:
+        print(ErrorText('Nessun risultato'))
 
 
 
@@ -151,3 +155,5 @@ if __name__ == '__main__':
         DisplayQuery(Matches)
     else:
         print(ErrorText('no results, empty query'))
+
+    input('premere il tasto INVIO per chiudere il pragramma')
