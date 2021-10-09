@@ -16,7 +16,7 @@ Trova qualsiasi elemento presente nei corsi universitari sul canale youtube del 
 * Web Information Retraial
 
 ## Prerequisiti
-* ultima versione di [python 3](https://www.python.org/)
+* ultima versione di [python 3](https://www.python.org/) (consigliata la versione 3.6+ che è stata testata)
   * modulo googleAPI
 
 ## Istruzioni d'uso
