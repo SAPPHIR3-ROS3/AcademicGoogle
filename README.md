@@ -6,8 +6,8 @@ Trova qualsiasi elemento presente nei corsi universitari sul canale youtube del 
   * modulo googleAPI
 
 ## Istruzioni d'uso
-* Setup (eseguire come amministratore)
-  * su Windows nel prompt dei comandi
+* Setup (eseguire come ***amministratore***)
+  * su Windows nel prompt dei comandi/powershell
     ```console
     python AutoSetupCLIversion.py
     ```
@@ -15,6 +15,14 @@ Trova qualsiasi elemento presente nei corsi universitari sul canale youtube del 
     ```console
     python3 AutoSetupCLIversion.py
     ```
+  * manuale
+   * avviare il terminale/cmd/powershell come ***amministratore*** e digitare
+   ```console
+   pip install googleapi
+   ```
+   > N.B.
+   > se "pip" non funziona usare "pip3"
+   
 * How-to
   * su Windows nel prompt dei comandi
     ```console
