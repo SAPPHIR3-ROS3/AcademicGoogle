@@ -1,6 +1,20 @@
 # Google of Enginering
 Trova qualsiasi elemento presente nei corsi universitari sul canale youtube del DIAG
 
+## Materie disponibili
+* Analisi Matematica I
+* Informatica I: Python
+* Informatica I: Modelli
+* Fisica 1-2
+* Sistemi di Calcolo
+* Robotics I
+* Robotics II
+* Tecniche di Programmazione
+* Ricerca Operativa
+* Basi di Dati
+* Statistica
+* Web Information Retraial
+
 ## Prerequisiti
 * ultima versione di [python 3](https://www.python.org/)
   * modulo googleAPI
