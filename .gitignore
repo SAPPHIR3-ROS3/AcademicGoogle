@@ -1,7 +1,8 @@
 /.idea/
 /__pycache__/
 /PyUniflix/
+/release/
+Data.db
 *.log
 out*.txt
-Data.db
-/release/
+*zip
