@@ -45,14 +45,9 @@ if __name__ == '__main__':
             print(ErrorText('invalid imput'))
             print(ErrorText('exiting'))
             quit()
-            
+
         from DBManagement import CreateDatabase
         CreateDatabase()
-
-        else:
-            print(ErrorText('invalid imput'))
-            print(ErrorText('exiting'))
-            quit()
 
     else:
         print(OKText('All set you are ready to start'))
