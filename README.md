@@ -1,13 +1,29 @@
 # Google of Enginering
 Trova qualsiasi elemento presente nei corsi universitari sul canale youtube del DIAG
 
+## Materie disponibili
+* Analisi Matematica I
+* Informatica I: Python
+* Informatica I: Modelli
+* Fisica 1-2
+* Sistemi di Calcolo
+* Robotics I
+* Robotics II
+* Tecniche di Programmazione
+* Ricerca Operativa
+* Basi di Dati
+* Statistica
+* Web Information Retraial
+
 ## Prerequisiti
-* ultima versione di [python 3](https://www.python.org/)
+* ultima versione di [python 3](https://www.python.org/) (consigliata la versione 3.6+ che è stata testata)
   * modulo googleAPI
 
 ## Istruzioni d'uso
-* Setup
-  * su Windows nel prompt dei comandi
+* Setup (eseguire come ***amministratore***)
+  > N.B. 
+  > assicurarsi che il terminale sia nella stella cartella del file altrimenti python non riuscirà a vedere i file interessati
+  * su Windows nel prompt dei comandi/powershell
     ```console
     python AutoSetupCLIversion.py
     ```
@@ -15,6 +31,14 @@ Trova qualsiasi elemento presente nei corsi universitari sul canale youtube del 
     ```console
     python3 AutoSetupCLIversion.py
     ```
+  * manuale
+    * avviare il terminale/cmd/powershell come ***amministratore*** e digitare
+     ```console
+     pip install googleapi
+     ```
+     > N.B.
+     > se "pip" non funziona usare "pip3"
+   
 * How-to
   * su Windows nel prompt dei comandi
     ```console
