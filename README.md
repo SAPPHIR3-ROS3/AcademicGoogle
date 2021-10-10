@@ -21,25 +21,25 @@ Trova qualsiasi elemento presente nei corsi universitari sul canale youtube del 
 
 ## Istruzioni d'uso
 * Setup (eseguire come ***amministratore***)
-  > N.B. 
+  > N.B.
   > assicurarsi che il terminale sia nella stella cartella del file altrimenti python non riuscirà a vedere i file interessati
-  * su Windows nel prompt dei comandi/powershell
+* su Windows nel prompt dei comandi/powershell
+  ```console
+  python AutoSetupCLIversion.py
+  ```
+* su Linux/MacOS sul terminale
+  ```console
+  python3 AutoSetupCLIversion.py
+  ```
+* manuale
+  * avviare il terminale/cmd/powershell come ***amministratore*** e digitare
     ```console
-    python AutoSetupCLIversion.py
+    pip install googleapi
     ```
-  * su Linux/MacOS sul terminale
-    ```console
-    python3 AutoSetupCLIversion.py
-    ```
-  * manuale
-    * avviare il terminale/cmd/powershell come ***amministratore*** e digitare
-     ```console
-     pip install googleapi
-     ```
-     > N.B.
-     > se "pip" non funziona usare "pip3"
-   
-* How-to
+    > N.B.
+    > se "pip" non funziona usare "pip3"
+
+* ### How-to
   * su Windows nel prompt dei comandi
     ```console
     python GoogleOfEngineering.py
@@ -50,3 +50,6 @@ Trova qualsiasi elemento presente nei corsi universitari sul canale youtube del 
     ```
   * una volta avviato il programma digitare gli argomenti a cui si è interessati (es. Integrali, Limiti ecc.) separati da una virgola (arg1, arg2, ...)
   * gli argomenti verranno suddivisi per query e per corso
+
+## Contatti
+se ci fossero problemi con il programma non esitate alasciare una Issue su Github o contattatemi su discord a YourSenpai#1953
