@@ -1,21 +1,18 @@
 from collections import OrderedDict as OrdDict
+from DBManagement import CreateDatabase
 from DBManagement import SearchInDatabase
 from googleapiclient.discovery import build as Activate
+from os.path import exists as Exists
 from re import finditer
-
-APIKey = 'AIzaSyA-dlBUjVQeuc4a6ZN4RkNUYDFddrVLxrA' #API Key need to perform the research
-YoutubeAPI = Activate('youtube', 'v3', developerKey = APIKey) #activation of youtube service by youtube API Key
-Playlist = YoutubeAPI.playlistItems() #playlist of videos
-YoutubePrefix = 'https://www.youtube.com/watch?v='
+from time import sleep as Sleep
 
 CEnd = '\033[0m' # end of coloured text
-ErrorText = lambda S: f'\33[31m{S}{CEnd}' #function for errors (red text)
-WarningText = lambda S: f'\33[33m{S}{CEnd}' #function for warnings (yellow text)
-OKText = lambda S: f'\33[92m{S}{CEnd}' #function for success operations (green text)
-Link = lambda S: f'\33[90m{S}{CEnd}'
+ErrorText = lambda S: f'\33[31m{S}{CEnd}' # function for errors (red text)
+WarningText = lambda S: f'\33[33m{S}{CEnd}' # function for warnings (yellow text)
+OKText = lambda S: f'\33[92m{S}{CEnd}' # function for success operations (green text)
+Link = lambda S: f'\33[90m{S}{CEnd}' # function for link of the videos (grey text)
 
-
-def GetVideoIDs(PlaylistID = ''): #this function get youtube ids
+def GetVideoIDs(PlaylistID = ''): # this function get youtube ids
     Pages = [None] #token IDs of the playlist pages
     VideosID = []
     i = 0 #page counter
@@ -40,7 +37,7 @@ def GetVideoIDs(PlaylistID = ''): #this function get youtube ids
 
     return VideosID
 
-def GetVideoData(ID = ''): #this function get the video metadata given the video id
+def GetVideoData(ID = ''): # this function get the video metadata given the video id
     Video = YoutubeAPI.videos().list(part = 'snippet, contentDetails', id = ID) #youtube API video obj
     Video = Video.execute()['items'][0] # video metadata
     Title = Video['snippet']['title'] #video title
@@ -65,69 +62,33 @@ def GetVideoData(ID = ''): #this function get the video metadata given the video
 
     return VideoMetaData
 
-def DisplayQuery(Data = None): #this function display the result in the proper way
-    if Data is not None:
-        if sum([len(Data[Query]) for Query in Data]) > 0:
-            print(f'{sum([len(Data[Query]) for Query in Data])} risultati trovati')
+def ConvertTimeStamp(Timestamp = ''): # this fucntion convert a timestamp in a single number
+    Timestamp = reversed([int(Part) for Part in Timestamp.split(':')]) # reverse the list composed byhours minutes seconds (as int)
+    Timestamp = sum([Part * (60**i) for i, Part in enumerate(Timestamp)]) # convert the timestamp in seconds
+    return Timestamp
 
-            for Key, Matches in Data.items():
-                print(Key, '\n')
-                for Match in Matches:
-                    print(f'\t[{Match["Course"]}] {Match["VideoTitle"]}')
-                    print(Link(f'\t{Match["VideoLink"]}'))
-                    print('\t...')
-                    print(OKText(f'\t[{Match["StartTimestamp"]}|{Match["EndTimestamp"]}] {Match["TimestampDescription"].replace("   ", " ")}'))
-                    print('\t...')
-                    print('\t'+'-' * 110)
+def DisplayQuery(Data = None): # this function display the result in the proper way
+    if Data is not None: # check if the data received is actually data
+        if sum([len(Data[Query]) for Query in Data]) > 0: # check if the query has given some result
+            print(f'{sum([len(Data[Query]) for Query in Data])} risultati trovati') # print print the sum of all result found
+
+            for Key, Matches in Data.items(): # for loop for every query searched
+                print(Key, '\n') # print the searched query
+                for Match in Matches: # for loop for every result found in the database
+                    print(f'\t[{Match["Course"]}] {Match["VideoTitle"]}') # playlist/origin
+                    print(Link(f'\t{Match["VideoLink"]}?t={ConvertTimeStamp(Match["StartTimestamp"])}')) # link of the youtube video
+                    print('\t...') # spacing
+                    print(OKText(f'\t[{Match["StartTimestamp"]}|{Match["EndTimestamp"]}] {Match["TimestampDescription"].replace("   ", " ")}')) # timestamp and description of result
+                    print('\t...') # spacing
+                    print('\t'+'-' * 110) # division between result
 
         else:
-            print(ErrorText('Nessun risultato'))
+            print(ErrorText('Nessun risultato')) # 0 results
 
     else:
-        print(ErrorText('Nessun risultato'))
+        print(ErrorText('Nessun risultato')) # 0 results
 
-
-
-# LEGACY
-
-def SearchData(Query = '', Data = []): #this function search between the data of the videos
-    Matches = OrdDict() #ordered dictionary of results
-
-    for Lesson in Data: #for loop for every lesson in the database
-        Argument = OrdDict() #dictionary for every line of the lesson description
-        for Key, Value in Lesson['Description'].items(): #for loop for every line of the description
-            if Query.lower() in Key.lower(): #check if the query is in the line of the description
-                Argument[Key] = Value #set the argument (key) and the timestamps (value)
-        if len(Argument) > 0: #check if the result in the lesson is not empty
-            Argument['Link'] = Lesson['Link'] #link of the video lesson
-            Matches[Lesson['Title']] = Argument #set the title of the video lesson (key) and the result(argument)
-
-    return Matches
-
-def Search(Query = '', Data = OrdDict()): #this function search in the database and filter properly the result
-    Matches = OrdDict() #ordered dictionary of results
-
-    for KeyLesson, ValueLesson in Data.items(): #loop for all the lesson
-        Argument = OrdDict() #temporary dictionary for arguments in lesson
-        for KeyArgument, ValueArgument in ValueLesson.items(): #loop for every argument in a lesson
-            if Query.lower() in KeyArgument.lower(): #check if the query is in the argument (case sensitive disabled)
-                Argument[KeyArgument] = ValueArgument #add the result to temporary dictionary
-        if len(Argument) > 0: #check if the temporary dictionary does really have at least an elements
-            Matches[KeyLesson] = Argument #add the temporary dictionary to the results
-
-    return Matches
-
-def DisplayResult(Argument = '', Matches = OrdDict()): #this function display the results of queries indented properly
-    print(Argument)
-    if len(Matches) > 0: #check if there is some results
-        for KeyMatch, ValueMatch in Matches.items(): # loop for every lesson present in the results
-            print('\t', KeyMatch) #proper indentation
-            for KeyArgument, ValueArgument in ValueMatch.items(): #loop for every argument of every lesson
-                print('\t' * 2, KeyArgument, ValueArgument) #proper indentation
-    else:
-        print('\t', 'Nessun risultato')
-
-if __name__ == '__main__':
+def main(Research = ''): # program function
     Title =\
     """
 
@@ -147,13 +108,35 @@ if __name__ == '__main__':
 
     """
     print(OKText(Title))
-    UInput = input('Cerca: ')
 
-    if len(UInput) > 0:
-        UInput = [Query[1 :] if Query.startswith(' ') else Query for Query in UInput.lower().split(',')]
-        Matches = SearchInDatabase(list(set(UInput)))
-        DisplayQuery(Matches)
+    if not Exists('Data.db'): # check if the database file exists
+        print(ErrorText('sembra che il database non sia presente nella cartella'))
+        print(WarningText('digita "DBManagement.py -c" nella ricerca di sotto per tentare la creazione del database manualmente (l\'operazione può richiedere un poò di minuti)'))
+        print(WarningText('assicurati che il file "Data.db" sia presente nella cartella altrimenti non avrai risultati dalle ricerche'))
+
+    if Research == '': # check if the program has been called before
+        UInput = input('Cerca: ')
+    else: # if the program has been called before the new research is used as query
+        UInput = Research
+
+    if UInput == 'DBManagement.py -c': # check if the user input is a command
+        CreateDatabase()
+
+    if len(UInput) > 0: # check if the query is not empty
+        UInput = [Query[1 :] if Query.startswith(' ') else Query for Query in UInput.lower().split(',')] # fix the input
+        Matches = SearchInDatabase(list(set(UInput))) # search queries in the database
+        DisplayQuery(Matches) # displey the results the queries
+
+    else: #if the query is empty
+        print(ErrorText('nessun risultato, query vuota'))
+
+    Research = input('premere il tasto INVIO per chiudere il pragramma o digita la tua prossima ricerca (sempre separata da virgole in caso di ricerche multiple) ') # check for new input
+
+    if Research == '': # no new input
+        quit() # program closes
     else:
-        print(ErrorText('no results, empty query'))
+        Sleep(1)
+        main(Research) # recursive call with next research
 
-    input('premere il tasto INVIO per chiudere il pragramma')
+if __name__ == '__main__':
+    main()
