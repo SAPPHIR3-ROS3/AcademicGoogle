@@ -1,12 +1,23 @@
+from ctypes import windll as WinDLL
 from subprocess import check_output as Shell
+from os import getuid as GetUID
 from os import name as SysName
 from os import system as Sys
+
+
 Dependencies = {'googleAPI' : 'googleAPI'} # dependencies need to run the program
 
 CEnd = '\033[0m' # end of coloured text
 ErrorText = lambda S: f'\33[31m{S}{CEnd}' #function for errors (red text)
 WarningText = lambda S: f'\33[33m{S}{CEnd}' #function for warnings (yellow text)
 OKText = lambda S: f'\33[92m{S}{CEnd}' #function for success operations (green text)
+
+def IsAdmin():
+    try:
+        Admin = (GetUID() == 0)
+    except AttributeError:
+        Admin = WinDLL.shell32.IsUserAnAdmin() != 0
+    return Admin
 
 def CheckDependencies(): # function to check all the needd dependencies in the script
     ModulesList= [i.decode() for i in Shell('pip list', shell = True).split()][4 :] #
@@ -22,33 +33,38 @@ if __name__ == '__main__':
     ModulesToIstall = CheckDependencies()
     Sys('cls' if  SysName =='nt' else 'clear')
 
-    if len(ModulesToIstall) > 0 :
-        print(WarningText('you need to install the following modules:'))
+    if IsAdmin():
+        if len(ModulesToIstall) > 0 :
+            print(WarningText('you need to install the following modules:'))
 
-        for Module in ModulesToIstall:
-            print(ErrorText(Module))
+            for Module in ModulesToIstall:
+                print(ErrorText(Module))
 
-        UInput = input('do you want to autoinstall them? <y/n> ')
-        Commands = ['pip install ' + Module for Module in ModulesToIstall]
+            UInput = input('do you want to autoinstall them? <y/n> ')
+            Commands = ['pip install ' + Module for Module in ModulesToIstall]
 
-        if UInput.lower() == 'y':
-            for Command in Commands:
-                Shell(Command, shell = True)
+            if UInput.lower() == 'y':
+                for Command in Commands:
+                    Shell(Command, shell = True)
 
-        elif UInput.lower() == 'n':
-            print(WarningText('copy and paste the following commands in cmd/powershell/terminal'))
+            elif UInput.lower() == 'n':
+                print(WarningText('copy and paste the following commands in cmd/powershell/terminal'))
 
-            for Command in Commands:
-                print(Command)
+                for Command in Commands:
+                    print(Command)
+
+            else:
+                print(ErrorText('invalid imput'))
+                print(ErrorText('exiting'))
+                quit()
 
         else:
-            print(ErrorText('invalid imput'))
-            print(ErrorText('exiting'))
-            quit()
+            print(OKText('All set you are ready to start'))
 
-        from DBManagement import CreateDatabase
-        CreateDatabase()
+        print('creating the database the operation may require a few minutes (do not close this window)')
+        Shell('python DBManagement.py -c', shell = True)
 
     else:
-        print(OKText('All set you are ready to start'))
+        print(ErrorText('you do NOT have Admin privileges please restart this script as Admin'))
 
+    input('press enter key to exit')
