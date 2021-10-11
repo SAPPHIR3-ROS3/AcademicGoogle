@@ -8,24 +8,24 @@ from os import system as Sys
 Dependencies = {'googleAPI' : 'googleAPI'} # dependencies need to run the program
 
 CEnd = '\033[0m' # end of coloured text
-ErrorText = lambda S: f'\33[31m{S}{CEnd}' #function for errors (red text)
-WarningText = lambda S: f'\33[33m{S}{CEnd}' #function for warnings (yellow text)
-OKText = lambda S: f'\33[92m{S}{CEnd}' #function for success operations (green text)
+ErrorText = lambda S: f'\33[31m{S}{CEnd}' # function for errors (red text)
+WarningText = lambda S: f'\33[33m{S}{CEnd}' # function for warnings (yellow text)
+OKText = lambda S: f'\33[92m{S}{CEnd}' # function for success operations (green text)
 
-def IsAdmin():
-    try:
-        Admin = (GetUID() == 0)
-    except AttributeError:
-        Admin = WinDLL.shell32.IsUserAnAdmin() != 0
+def IsAdmin(): # this function check if the user is admin
+    try: # if the user is on UNIX-like systems
+        Admin = (GetUID() == 0) # the SUDO user on UNIX systems is always 0
+    except AttributeError: # if the user is on windows
+        Admin = WinDLL.shell32.IsUserAnAdmin() != 0 # the windows API automatic checking
     return Admin
 
 def CheckDependencies(): # function to check all the needd dependencies in the script
-    ModulesList= [i.decode() for i in Shell('pip list', shell = True).split()][4 :] #
-    Modules = [ModulesList[i] for i in range(len(ModulesList)) if i % 2 == 0]
-    Versions = [ModulesList[i] for i in range(len(ModulesList)) if i % 2 == 1]
-    ModuleString = ' '.join([i.replace('-', '') + '==' + j for i,j in zip(Modules,Versions)])
+    ModulesList= [i.decode() for i in Shell('pip list', shell = True).split()][4 :] # from the list generated from pip list it generates a list of the installed modules
+    Modules = [ModulesList[i] for i in range(len(ModulesList)) if i % 2 == 0] # extract modules name
+    Versions = [ModulesList[i] for i in range(len(ModulesList)) if i % 2 == 1] # extract the version of the modules
+    ModuleString = ' '.join([i.replace('-', '') + '==' + j for i,j in zip(Modules,Versions)]) # format properly the modules and their versions
 
-    MissingModules = [Dependency for Dependency in Dependencies if Dependencies[Dependency] not in ModuleString]
+    MissingModules = [Dependency for Dependency in Dependencies if Dependencies[Dependency] not in ModuleString] # check if the needed dependencies are installed
 
     return MissingModules
 
