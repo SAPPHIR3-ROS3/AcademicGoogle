@@ -52,4 +52,4 @@ Trova qualsiasi elemento presente nei corsi universitari sul canale youtube del 
   * gli argomenti verranno suddivisi per query e per corso
 
 ## Contatti
-se ci fossero problemi con il programma non esitate alasciare una Issue su Github o contattatemi su discord a YourSenpai#1953
+se ci fossero problemi con il programma non esitate a lasciare una Issue su Github o contattatemi su discord a YourSenpai#1953
