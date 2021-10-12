@@ -1,9 +1,6 @@
-from ctypes import windll as WinDLL
-from subprocess import check_output as Shell
-from os import getuid as GetUID
 from os import name as SysName
 from os import system as Sys
-
+from subprocess import check_output as Shell
 
 Dependencies = {'googleAPI' : 'googleAPI'} # dependencies need to run the program
 
@@ -14,8 +11,10 @@ OKText = lambda S: f'\33[92m{S}{CEnd}' # function for success operations (green 
 
 def IsAdmin(): # this function check if the user is admin
     try: # if the user is on UNIX-like systems
+        from os import getuid as GetUID
         Admin = (GetUID() == 0) # the SUDO user on UNIX systems is always 0
     except AttributeError: # if the user is on windows
+        from ctypes import windll as WinDLL
         Admin = WinDLL.shell32.IsUserAnAdmin() != 0 # the windows API automatic checking
     return Admin
 
