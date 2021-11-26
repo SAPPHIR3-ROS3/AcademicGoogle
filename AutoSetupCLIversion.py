@@ -61,8 +61,12 @@ if __name__ == '__main__':
             print(OKText('All set you are ready to start'))
 
         print('creating the database the operation may require a few minutes (do not close this window)')
-        Shell('python DBManagement.py -c', shell = True)
-
+        
+        if SysName == 'nt':
+            Shell('python DBManagement.py -c', shell = True)
+        else:
+            Shell('python3 DBManagement.py -c', shell = True)
+            
     else:
         print(ErrorText('you do NOT have Admin privileges please restart this script as Admin'))
 
