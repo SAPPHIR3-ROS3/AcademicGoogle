@@ -6,3 +6,5 @@ Data.db
 *.log
 out*.txt
 *zip
+.DS_Store
+test*.*
