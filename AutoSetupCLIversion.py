@@ -2,7 +2,9 @@ from os import name as SysName
 from os import system as Sys
 from subprocess import check_output as Shell
 
-Dependencies = {'googleAPI' : 'googleAPI'} # dependencies need to run the program
+with open('requirements.txt') as Reqs:
+    Dependencies = [Line.strip() for Line in Reqs.readlines()] # dependencies need to run the program
+    #Dependencies = {'googleAPI' : 'googleAPI'} 
 
 CEnd = '\033[0m' # end of coloured text
 ErrorText = lambda S: f'\33[31m{S}{CEnd}' # function for errors (red text)
@@ -13,9 +15,10 @@ def IsAdmin(): # this function check if the user is admin
     try: # if the user is on UNIX-like systems
         from os import getuid as GetUID
         Admin = (GetUID() == 0) # the SUDO user on UNIX systems is always 0
-    except AttributeError: # if the user is on windows
+    except ImportError or AttributeError: # if the user is on windows
         from ctypes import windll as WinDLL
         Admin = WinDLL.shell32.IsUserAnAdmin() != 0 # the windows API automatic checking
+        
     return Admin
 
 def CheckDependencies(): # function to check all the needd dependencies in the script
@@ -24,7 +27,7 @@ def CheckDependencies(): # function to check all the needd dependencies in the s
     Versions = [ModulesList[i] for i in range(len(ModulesList)) if i % 2 == 1] # extract the version of the modules
     ModuleString = ' '.join([i.replace('-', '') + '==' + j for i,j in zip(Modules,Versions)]) # format properly the modules and their versions
 
-    MissingModules = [Dependency for Dependency in Dependencies if Dependencies[Dependency] not in ModuleString] # check if the needed dependencies are installed
+    MissingModules = [Dependency for Dependency in Dependencies if Dependency not in ModuleString] # check if the needed dependencies are installed
 
     return MissingModules
 
@@ -39,14 +42,14 @@ if __name__ == '__main__':
             for Module in ModulesToIstall:
                 print(ErrorText(Module))
 
-            UInput = input('do you want to autoinstall them? <y/n> ')
+            UInput = input('do you want to autoinstall them? <y/n> ').lower()
             Commands = ['pip install ' + Module for Module in ModulesToIstall]
 
-            if UInput.lower() == 'y':
+            if UInput == 'y':
                 for Command in Commands:
                     Shell(Command, shell = True)
 
-            elif UInput.lower() == 'n':
+            elif UInput == 'n':
                 print(WarningText('copy and paste the following commands in cmd/powershell/terminal'))
 
                 for Command in Commands:
