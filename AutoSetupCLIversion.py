@@ -1,10 +1,11 @@
+from DBManagement import *
 from os import name as SysName
 from os import system as Sys
 from subprocess import check_output as Shell
 
+
 with open('requirements.txt') as Reqs:
     Dependencies = [Line.strip() for Line in Reqs.readlines()] # dependencies need to run the program
-    #Dependencies = {'googleAPI' : 'googleAPI'} 
 
 CEnd = '\033[0m' # end of coloured text
 ErrorText = lambda S: f'\33[31m{S}{CEnd}' # function for errors (red text)
@@ -34,41 +35,30 @@ def CheckDependencies(): # function to check all the needd dependencies in the s
 if __name__ == '__main__':
     ModulesToIstall = CheckDependencies()
     Sys('cls' if  SysName =='nt' else 'clear')
+    print('this is an autosetup program, this means that require admin privileges to automate the installation of the third party modules')
 
     if IsAdmin():
         if len(ModulesToIstall) > 0 :
-            print(WarningText('you need to install the following modules:'))
+            print(WarningText('the following modules will be installed:'))
 
             for Module in ModulesToIstall:
                 print(ErrorText(Module))
-
-            UInput = input('do you want to autoinstall them? <y/n> ').lower()
-            Commands = ['pip install ' + Module for Module in ModulesToIstall]
-
-            if UInput == 'y':
-                for Command in Commands:
-                    Shell(Command, shell = True)
-
-            elif UInput == 'n':
-                print(WarningText('copy and paste the following commands in cmd/powershell/terminal'))
-
-                for Command in Commands:
-                    print(Command)
-
+    
+            Proceed = input('proceed(if in doubt press y)?<y/n>').lower()
+            
+            if Proceed == 'y': 
+                if SysName == 'nt':
+                    Shell('pip install -r requirements.txt', shell = True)
+                else:
+                    Shell('pip3 install -r requirements.txt', shell = True)
             else:
-                print(ErrorText('invalid imput'))
-                print(ErrorText('exiting'))
+                print('you will need to install the modules manually')
                 quit()
-
         else:
             print(OKText('All set you are ready to start'))
 
-        print('creating the database the operation may require a few minutes (do not close this window)')
-        
-        if SysName == 'nt':
-            Shell('python DBManagement.py -c', shell = True)
-        else:
-            Shell('python3 DBManagement.py -c', shell = True)
+        print('creating the database the operation may require a few minutes (do not close this window)')   
+        CreateDatabase()
             
     else:
         print(ErrorText('you do NOT have Admin privileges please restart this script as Admin'))
