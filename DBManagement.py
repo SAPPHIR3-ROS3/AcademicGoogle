@@ -1,7 +1,9 @@
 from collections import OrderedDict as OrdDict
 from googleapiclient.discovery import build as Activate
 from hashlib import sha256 as SHA256
+from json import loads
 from os.path import exists as Exists
+from re import findall
 from re import finditer
 from sqlite3 import connect as Connect
 from sqlite3 import PARSE_DECLTYPES as TimeStamps
@@ -18,30 +20,18 @@ YoutubeAPI = Activate('youtube', 'v3', developerKey = APIKey) #activation of you
 Playlist = YoutubeAPI.playlistItems() #playlist of videos
 YoutubePrefix = 'https://www.youtube.com/watch?v='
 
-Courses =\
-{
-    'Analisi Matematica I' : 'PLAQopGWlIcyZlCmXWE_KvtMi57Mwbyf6C',
-    'Informatica I: Python' : 'PLAQopGWlIcyaYO89pmFViY4z_y8lj2IQA',
-    'Informatica I: Modelli' : 'PLAQopGWlIcyalkb2baN9mnotsdBm5Vbkc',
-    'Fisica 1-2' : 'PLAQopGWlIcyYqImhBYHb6ffUiLx6HyVAv',
-    'Sistemi di Calcolo' : 'PLAQopGWlIcybT12h7fjVvlGAeSqOKDnTA',
-    'Robotics I' : 'PLAQopGWlIcyaqDBW1zSKx7lHfVcOmWSWt',
-    'Robotics II' : 'PLAQopGWlIcya6LnIF83QlJTqvpYmJXnDm',
-    'Tecniche di Programmazione' : 'PLAQopGWlIcybv3YLRHGS4yZR00X3RvSBm',
-    'Ricerca Operativa' : 'PLAQopGWlIcyZankm1hHCSOdBilSGC3Svg',
-    'Basi di Dati' : 'PLAQopGWlIcyZ7CN1sefdnCusfoodLP931',
-    'Statistica' : 'PLAQopGWlIcyYS5uAXk6M6lD2uXW2_dnCG',
-    'Web Information Retraial' : 'PLAQopGWlIcya-9yzQ8c8UtPOuCv0mFZkr'
-}
+def GetPlaylistID(url = ''):
+    return url.replace('https://www.youtube.com/playlist?list=', '')
+
+Courses = {course : GetPlaylistID(playlist) for course, playlist in loads('Courses.json').items()}
 
 CEnd = '\033[0m' # end of coloured text
 ErrorText = lambda S: f'\33[31m{S}{CEnd}' #function for errors (red text)
 WarningText = lambda S: f'\33[33m{S}{CEnd}' #function for warnings (yellow text)
 OKText = lambda S: f'\33[92m{S}{CEnd}' #function for success operations (green text)
 
-def GetVideoIDs(PlaylistID = ''): #this function get youtube ids
+def GetPlaylistPages(PlaylistID = ''):
     Pages = [None] #token IDs of the playlist pages
-    VideosID = []
     i = 0 #page counter
 
     while True: #loop through all the pages of the playlist until there is no next page
@@ -55,6 +45,12 @@ def GetVideoIDs(PlaylistID = ''): #this function get youtube ids
         Pages.append(NextPageToken) # add the token to token list
         i += 1 #increase of page counter
 
+    return Pages
+
+def GetVideoIDs(PlaylistID = ''): #this function get youtube ids
+    Pages = GetPlaylistPages()
+    VideosID = []
+    
     for Page in Pages: #loop for every page of results
         Videos = Playlist.list(part='contentDetails', playlistId = PlaylistID, maxResults = 50, pageToken = Page) #setting the page
         Videos = Videos.execute() #request execution
@@ -68,26 +64,39 @@ def GetVideoData(ID = ''): #this function get the video metadata given the video
     Video = YoutubeAPI.videos().list(part = 'snippet, contentDetails', id = ID) #youtube API video obj
     Video = Video.execute()['items'][0] # video metadata
     Title = Video['snippet']['title'] #video title
+    ChannelTitle = Video['snippet']['channelTitle']
     Duration = Video['contentDetails']['duration'][2 : - 1] #removing useless part of duration
     Duration = Duration.replace('H', ':').replace('M', ':') #formatting correctly the duration of timestamp
     Duration = ':'.join([Part if len(Part) > 1 else '0' + Part for Part in Duration.split(':')]) #setting proper length of timestamps segment
-    DescriptionList = [Line.strip() for Line in Video['snippet']['description'].split('\n')] #splitting the description in lines
     RawDescription = str(Video['snippet']['description'])
     Timestamps = r'(?=(\d{1,2}:\d{2}:\d{2}|\d{2}:\d{2})\s(.+)\n?(\d{1,2}:\d{2}:\d{2}|\d{2}:\d{2})?)' #regex to find start timestamp, argument and end timestamps
-
     Description = [[Group if not Group == None else Duration for Group in Line.groups()] for Line in finditer(Timestamps, RawDescription)]
     #formatting in a list properly the matches (timestamps and argument)
     Description = [(Group[1], Group[0], Group[2]) for Group in Description][: - 1] #correcting the order of sublist and removing last(dup licate)
 
     VideoMetaData =\
     {
-        'Link' : YoutubePrefix + ID,
+        'Link' : YoutubePrefix + ID + '&ab_channel=' + ChannelTitle,
+        'Channel' : ChannelTitle,
         'Title' : Title, #title of the video (string)
         'Duration' :Duration, # duration HH:MM:SS (string)
         'Description' : Description # description (string : list of timestamps)(OrdDict)
     }
 
     return VideoMetaData
+
+def HasTimestamps(VideoID = ''):
+    Video = YoutubeAPI.videos().list(part = 'snippet', id = VideoID) #youtube API video obj
+    RawDescription = str(Video['snippet']['description'])
+    Timestamps = r'(?=(\d{1,2}:\d{2}:\d{2}|\d{2}:\d{2})\s(.+)\n?(\d{1,2}:\d{2}:\d{2}|\d{2}:\d{2})?)' #regex to find start timestamp, argument and end timestamps
+
+    return len(*finditer(Timestamps, RawDescription)) > 1
+    #Description = [[Group if not Group == None else Duration for Group in Line.groups()] for Line in finditer(Timestamps, RawDescription)]
+
+def IsCompatible(PlaylistID = ''):
+    VideoIDs = GetVideoIDs(PlaylistID)
+    
+    return all([HasTimestamps(ID) for ID in VideoIDs])
 
 def CreateDatabase(): #this function create the database with timestamps from scratch
     Database = Connect('Data.db', detect_types = TimeStamps) # database file creation
@@ -103,10 +112,16 @@ def CreateDatabase(): #this function create the database with timestamps from sc
     ) # reference table of playlist of the courses
 
     print(OKText('Courses table created'))
-    for Course, PLID in Courses.items(): # loop for filling the courses table
-        DBShell.execute('INSERT INTO Courses VALUES (:PLID, :CourseName)', {'PLID' : PLID, 'CourseName' : Course}) #secured execution of the query to insert value from
-    print(OKText('Courses table filled'))
 
+    for Course, PLID in Courses.copy().items():
+        if not IsCompatible(PLID):
+            print(f'{Course} is incompatible, it will be skipped')
+            Courses.pop(Course)
+
+    for Course, PLID in Courses.items(): # loop for filling the courses table
+        DBShell.execute('INSERT INTO Courses VALUES (:PLID, :CourseName)', {'PLID' : GetPlaylistID(PLID), 'CourseName' : Course}) #secured execution of the query to insert value from
+    
+    print(OKText('Courses table filled'))
 
     DBShell.execute\
     (
@@ -114,6 +129,7 @@ def CreateDatabase(): #this function create the database with timestamps from sc
         CREATE TABLE IF NOT EXISTS Timestamps (
         TimestampID text PRIMARY KEY NOT NULL,
         Course text NOT NULL,
+        ChannelTitle text NOT NULL,
         VideoLink text NOT NULL,
         VideoTitle text NOT NULL,
         StartTimestamp text NOT NULL,
@@ -137,13 +153,14 @@ def CreateDatabase(): #this function create the database with timestamps from sc
                 Parameters = dict() # parameters dictionary for the insertion query
                 Parameters['Link'] = Video['Link']
                 Parameters['Course'] = Course
+                Parameters['ChannelTitle'] = Video['ChannelTitle']
                 Parameters['Title'] = Video['Title']
                 Parameters['StartTimestamp'] = Line[1]
                 Parameters['EndTimestamp'] = Line[2]
                 Parameters['TimestampDescription'] = Line[0].replace(':',  '║').replace('-', ' ') # replacing "problematic" character
-                Parameters['TimestampID'] = SHA256(str(Video['Link']+Video['Title']+Line[1]+Line[2]+Line[0]).encode()).hexdigest() # creation of a unique sha256 as Primary Key of the table
+                Parameters['TimestampID'] = SHA256(str(Video['Link']+Video['ChannelTItle']+Video['Title']+Line[1]+Line[2]+Line[0]).encode()).hexdigest() # creation of a unique sha256 as Primary Key of the table
                 #print(f'timestamp {Parameters["TimestampID"]} marked at video {VideoID} of {Course}')
-                DBShell.execute('INSERT INTO Timestamps VALUES (:TimestampID, :Course, :Link, :Title, :StartTimestamp, :EndTimestamp, :TimestampDescription)', Parameters) #values insertion in the table
+                DBShell.execute('INSERT INTO Timestamps VALUES (:TimestampID, :Course, :ChannelTitle, :Link, :Title, :StartTimestamp, :EndTimestamp, :TimestampDescription)', Parameters) #values insertion in the table
                 Database.commit() #database update
     Database.close() #closing connection of the database
     print(OKText('Timestamps table filled'))
@@ -165,6 +182,7 @@ def SearchInDatabase(Queries = None): # this fucntion query in the database to f
             for Query in Queries: # for loop for every query in the list
                 Selection = """SELECT
                 Course,
+                ChannelTitle,
                 VideoTitle,
                 StartTimestamp,
                 EndTimestamp,
@@ -174,7 +192,7 @@ def SearchInDatabase(Queries = None): # this fucntion query in the database to f
                 ORDER BY Course"""
                 DBShell.execute(Selection, {'Query' : Query}) # query in database to find result ordered by relevance and chronological order
                 QueryResult = DBShell.fetchall() # saving the result
-                QueryKeys = ['Course', 'VideoTitle', 'StartTimestamp', 'EndTimestamp', 'TimestampDescription', 'VideoLink'] # keys of the dictionary (not to deal with indexes)
+                QueryKeys = ['Course', 'ChannelTitle', 'VideoTitle', 'StartTimestamp', 'EndTimestamp', 'TimestampDescription', 'VideoLink'] # keys of the dictionary (not to deal with indexes)
                 Results[Query] = [{Key : Value for Key, Value in zip(QueryKeys, Match)} for Match in QueryResult] # transforming result in a better format
                 # dictionary of queries as keys and an ordered list of dictionaries which rappresents a match as values
 
