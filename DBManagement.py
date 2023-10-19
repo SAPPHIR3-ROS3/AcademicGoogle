@@ -65,6 +65,7 @@ def GetVideoData(ID = ''): #this function get the video metadata given the video
     Video = Video.execute()['items'][0] # video metadata
     Title = Video['snippet']['title'] #video title
     ChannelTitle = Video['snippet']['channelTitle']
+    Tags = '\t'.join(Video['snippet']['tags'])
     Duration = Video['contentDetails']['duration'][2 : - 1] #removing useless part of duration
     Duration = Duration.replace('H', ':').replace('M', ':') #formatting correctly the duration of timestamp
     Duration = ':'.join([Part if len(Part) > 1 else '0' + Part for Part in Duration.split(':')]) #setting proper length of timestamps segment
@@ -79,6 +80,7 @@ def GetVideoData(ID = ''): #this function get the video metadata given the video
         'Link' : YoutubePrefix + ID + '&ab_channel=' + ChannelTitle,
         'Channel' : ChannelTitle,
         'Title' : Title, #title of the video (string)
+        'Tags' : Tags,
         'Duration' :Duration, # duration HH:MM:SS (string)
         'Description' : Description # description (string : list of timestamps)(OrdDict)
     }
@@ -154,19 +156,31 @@ def CreateDatabase(): #this function create the database with timestamps from sc
                 Parameters['Link'] = Video['Link']
                 Parameters['Course'] = Course
                 Parameters['ChannelTitle'] = Video['ChannelTitle']
+                #Parameters['Tags'] = Video['Tags']
                 Parameters['Title'] = Video['Title']
                 Parameters['StartTimestamp'] = Line[1]
                 Parameters['EndTimestamp'] = Line[2]
                 Parameters['TimestampDescription'] = Line[0].replace(':',  '║').replace('-', ' ') # replacing "problematic" character
                 Parameters['TimestampID'] = SHA256(str(Video['Link']+Video['ChannelTItle']+Video['Title']+Line[1]+Line[2]+Line[0]).encode()).hexdigest() # creation of a unique sha256 as Primary Key of the table
                 #print(f'timestamp {Parameters["TimestampID"]} marked at video {VideoID} of {Course}')
-                DBShell.execute('INSERT INTO Timestamps VALUES (:TimestampID, :Course, :ChannelTitle, :Link, :Title, :StartTimestamp, :EndTimestamp, :TimestampDescription)', Parameters) #values insertion in the table
+                DBShell.execute('INSERT INTO Timestamps VALUES (:TimestampID, :Course, :ChannelTitle, :Tags, :Link, :Title, :StartTimestamp, :EndTimestamp, :TimestampDescription)', Parameters) #values insertion in the table
                 Database.commit() #database update
     Database.close() #closing connection of the database
     print(OKText('Timestamps table filled'))
 
 def Verify():
-    pass #TODO
+    LocalCourses = loads('Courses.json')
+    Query = "SELECT CourseName, PLID FROM Courses"
+    Database = Connect('Data.db', detect_types = TimeStamps) # database file creation
+    DBShell = Database.cursor() # shell to run queries
+    DBShell.execute(Query)
+    CurrentCourses = {Match[0] : Match[1] for Match in DBShell.fetchall()}
+    NewCourses = dict()
+
+    for Course in LocalCourses:
+        if not Course in CurrentCourses.keys() or not CurrentCourses[Course] == LocalCourses[Course]:
+            NewCourses[Course] = LocalCourses[Course]
+
 
 def SearchInDatabase(Queries = None): # this fucntion query in the database to find relevant result
     #print(f'searching {", ".join(Queries)} in the database')
@@ -188,7 +202,9 @@ def SearchInDatabase(Queries = None): # this fucntion query in the database to f
                 EndTimestamp,
                 TimestampDescription,
                 VideoLink
-                FROM Timestamps WHERE TimestampDescription LIKE '%'||:Query||'%'
+                FROM Timestamps 
+                WHERE TimestampDescription LIKE '%'||:Query||'%'
+                OR VideoTitle LIKE '%'||:Query||'%'
                 ORDER BY Course"""
                 DBShell.execute(Selection, {'Query' : Query}) # query in database to find result ordered by relevance and chronological order
                 QueryResult = DBShell.fetchall() # saving the result
