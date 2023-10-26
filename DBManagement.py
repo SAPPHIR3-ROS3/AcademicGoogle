@@ -170,7 +170,8 @@ def CreateDatabase(): #this function create the database with timestamps from sc
     print(OKText('Timestamps table filled'))
 
 def Verify():
-    LocalCourses = load('Courses.json')
+    with open('Courses.joson') as Json:
+        LocalCourses = load(Json)
     Query = "SELECT CourseName, PLID FROM Courses"
     Database = Connect('Data.db', detect_types = TimeStamps) # database file creation
     DBShell = Database.cursor() # shell to run queries
