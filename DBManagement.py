@@ -1,7 +1,7 @@
 from collections import OrderedDict as OrdDict
 from googleapiclient.discovery import build as Activate
 from hashlib import sha256 as SHA256
-from json import loads
+from json import load
 from os.path import exists as Exists
 from re import findall
 from re import finditer
@@ -20,17 +20,18 @@ YoutubeAPI = Activate('youtube', 'v3', developerKey = APIKey) #activation of you
 Playlist = YoutubeAPI.playlistItems() #playlist of videos
 YoutubePrefix = 'https://www.youtube.com/watch?v='
 
-def GetPlaylistID(url = ''):
+def GetPlaylistID(url = ''): # extract the playlist id from the url
     return url.replace('https://www.youtube.com/playlist?list=', '')
 
-Courses = {course : GetPlaylistID(playlist) for course, playlist in loads('Courses.json').items()}
+with open('Courses.json') as Json: # load the courses file
+    Courses = {course : GetPlaylistID(playlist) for course, playlist in load(Json).items()} # preloading the courses
 
 CEnd = '\033[0m' # end of coloured text
 ErrorText = lambda S: f'\33[31m{S}{CEnd}' #function for errors (red text)
 WarningText = lambda S: f'\33[33m{S}{CEnd}' #function for warnings (yellow text)
 OKText = lambda S: f'\33[92m{S}{CEnd}' #function for success operations (green text)
 
-def GetPlaylistPages(PlaylistID = ''):
+def GetPlaylistPages(PlaylistID = ''): # playlist pages retrieval
     Pages = [None] #token IDs of the playlist pages
     i = 0 #page counter
 
@@ -79,7 +80,7 @@ def GetVideoData(ID = ''): #this function get the video metadata given the video
     {
         'Link' : YoutubePrefix + ID + '&ab_channel=' + ChannelTitle,
         'Channel' : ChannelTitle,
-        'Title' : Title, #title of the video (string)
+        'Title' : Title, # title of the video (string)
         'Tags' : Tags,
         'Duration' :Duration, # duration HH:MM:SS (string)
         'Description' : Description # description (string : list of timestamps)(OrdDict)
