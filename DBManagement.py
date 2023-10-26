@@ -157,13 +157,13 @@ def CreateDatabase(): #this function create the database with timestamps from sc
                 Parameters['Link'] = Video['Link']
                 Parameters['Course'] = Course
                 Parameters['ChannelTitle'] = Video['ChannelTitle']
-                #Parameters['Tags'] = Video['Tags']
+                # Parameters['Tags'] = Video['Tags'] # not available at the moment (possible future implementation)
                 Parameters['Title'] = Video['Title']
                 Parameters['StartTimestamp'] = Line[1]
                 Parameters['EndTimestamp'] = Line[2]
                 Parameters['TimestampDescription'] = Line[0].replace(':',  '║').replace('-', ' ') # replacing "problematic" character
                 Parameters['TimestampID'] = SHA256(str(Video['Link']+Video['ChannelTItle']+Video['Title']+Line[1]+Line[2]+Line[0]).encode()).hexdigest() # creation of a unique sha256 as Primary Key of the table
-                #print(f'timestamp {Parameters["TimestampID"]} marked at video {VideoID} of {Course}')
+                # print(f'timestamp {Parameters["TimestampID"]} marked at video {VideoID} of {Course}') # debug
                 DBShell.execute('INSERT INTO Timestamps VALUES (:TimestampID, :Course, :ChannelTitle, :Tags, :Link, :Title, :StartTimestamp, :EndTimestamp, :TimestampDescription)', Parameters) #values insertion in the table
                 Database.commit() #database update
     Database.close() #closing connection of the database
