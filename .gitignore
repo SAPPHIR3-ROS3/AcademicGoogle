@@ -1,6 +1,5 @@
 /.idea/
-/__pycache__/
-/PyUniflix/
+/Env/
 /release/
 Data.db
 *.log
