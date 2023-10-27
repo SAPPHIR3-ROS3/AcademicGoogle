@@ -1,6 +1,7 @@
 /.idea/
 /Env/
 /release/
+/__pycache__/
 Data.db
 *.log
 out*.txt
