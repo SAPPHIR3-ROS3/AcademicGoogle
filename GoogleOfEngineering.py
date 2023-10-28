@@ -3,7 +3,6 @@ from DBManagement import CreateDatabase
 from DBManagement import SearchInDatabase
 from googleapiclient.discovery import build as Activate
 from os.path import exists as Exists
-from re import finditer
 from time import sleep as Sleep
 
 CEnd = '\033[0m' # end of coloured text
