@@ -2,6 +2,7 @@ from collections import OrderedDict as OrdDict
 from googleapiclient.discovery import build as Activate
 from hashlib import sha256 as SHA256
 from json import load
+from os import remove as Remove
 from os.path import exists as Exists
 from re import findall
 from re import finditer
@@ -19,6 +20,7 @@ APIKey = 'AIzaSyA-dlBUjVQeuc4a6ZN4RkNUYDFddrVLxrA' #API Key need to perform the 
 YoutubeAPI = Activate('youtube', 'v3', developerKey = APIKey) #activation of youtube service by youtube API Key
 Playlist = YoutubeAPI.playlistItems() #playlist of videos
 YoutubePrefix = 'https://www.youtube.com/watch?v='
+CompatibilityThreshold = 20
 
 def GetPlaylistID(url = ''): # extract the playlist id from the url
     return url.replace('https://www.youtube.com/playlist?list=', '')
@@ -49,7 +51,7 @@ def GetPlaylistPages(PlaylistID = ''): # playlist pages retrieval
     return Pages
 
 def GetVideoIDs(PlaylistID = ''): #this function get youtube ids
-    Pages = GetPlaylistPages()
+    Pages = GetPlaylistPages(PlaylistID)
     VideosID = []
     
     for Page in Pages: #loop for every page of results
@@ -74,12 +76,12 @@ def GetVideoData(ID = ''): #this function get the video metadata given the video
     Timestamps = r'(?=(\d{1,2}:\d{2}:\d{2}|\d{2}:\d{2})\s(.+)\n?(\d{1,2}:\d{2}:\d{2}|\d{2}:\d{2})?)' #regex to find start timestamp, argument and end timestamps
     Description = [[Group if not Group == None else Duration for Group in Line.groups()] for Line in finditer(Timestamps, RawDescription)]
     #formatting in a list properly the matches (timestamps and argument)
-    Description = [(Group[1], Group[0], Group[2]) for Group in Description][: - 1] #correcting the order of sublist and removing last(dup licate)
+    Description = [(Group[1], Group[0], Group[2]) for Group in Description][: - 1] #correcting the order of sublist and removing last(duplicate)
 
     VideoMetaData =\
     {
         'Link' : YoutubePrefix + ID + '&ab_channel=' + ChannelTitle,
-        'Channel' : ChannelTitle,
+        'ChannelTitle' : ChannelTitle,
         'Title' : Title, # title of the video (string)
         'Tags' : Tags,
         'Duration' :Duration, # duration HH:MM:SS (string)
@@ -89,25 +91,23 @@ def GetVideoData(ID = ''): #this function get the video metadata given the video
     return VideoMetaData
 
 def HasTimestamps(VideoID = ''):
-    Video = YoutubeAPI.videos().list(part = 'snippet', id = VideoID) #youtube API video obj
-    RawDescription = str(Video['snippet']['description'])
-    Timestamps = r'(?=(\d{1,2}:\d{2}:\d{2}|\d{2}:\d{2})\s(.+)\n?(\d{1,2}:\d{2}:\d{2}|\d{2}:\d{2})?)' #regex to find start timestamp, argument and end timestamps
+    Video = GetVideoData(VideoID)
+    return True if len(Video['Description']) > 1 else False
 
-    return len(*finditer(Timestamps, RawDescription)) > 1
-    #Description = [[Group if not Group == None else Duration for Group in Line.groups()] for Line in finditer(Timestamps, RawDescription)]
-
-def IsCompatible(PlaylistID = ''):
+def HowCompatible(PlaylistID = ''):
     VideoIDs = GetVideoIDs(PlaylistID)
+    Playlist = [HasTimestamps(ID) for ID in VideoIDs]
     
-    return all([HasTimestamps(ID) for ID in VideoIDs])
+    return int(round(Playlist.count(True)/len(Playlist), 2) * 100)
 
 def CreateDatabase(): #this function create the database with timestamps from scratch
+    if Exists('Data.db'): Remove('Data.db')
     Database = Connect('Data.db', detect_types = TimeStamps) # database file creation
     DBShell = Database.cursor() # shell to run queries
     DBShell.execute\
     (
         """
-        CREATE TABLE IF NOT EXISTS Courses (
+        CREATE TABLE Courses (
         PlaylistID text PRIMARY KEY NOT NULL,
         CourseName text NOT NULL
         )
@@ -117,9 +117,13 @@ def CreateDatabase(): #this function create the database with timestamps from sc
     print(OKText('Courses table created'))
 
     for Course, PLID in Courses.copy().items():
-        if not IsCompatible(PLID):
-            print(f'{Course} is incompatible, it will be skipped')
+        print(OKText(f'Verifying {Course} ({PLID})'))
+        Compatibility = HowCompatible(PLID)
+        if Compatibility < (100 - CompatibilityThreshold):
+            print(WarningText('incompatible, it will be skipped'))
             Courses.pop(Course)
+        else:
+            print(OKText(f'{Compatibility}% compatible'))
 
     for Course, PLID in Courses.items(): # loop for filling the courses table
         DBShell.execute('INSERT INTO Courses VALUES (:PLID, :CourseName)', {'PLID' : GetPlaylistID(PLID), 'CourseName' : Course}) #secured execution of the query to insert value from
@@ -162,15 +166,17 @@ def CreateDatabase(): #this function create the database with timestamps from sc
                 Parameters['StartTimestamp'] = Line[1]
                 Parameters['EndTimestamp'] = Line[2]
                 Parameters['TimestampDescription'] = Line[0].replace(':',  '║').replace('-', ' ') # replacing "problematic" character
-                Parameters['TimestampID'] = SHA256(str(Video['Link']+Video['ChannelTItle']+Video['Title']+Line[1]+Line[2]+Line[0]).encode()).hexdigest() # creation of a unique sha256 as Primary Key of the table
+                Parameters['TimestampID'] = SHA256(str(Video['Link']+Video['ChannelTitle']+Video['Title']+Line[1]+Line[2]+Line[0]).encode()).hexdigest() # creation of a unique sha256 as Primary Key of the table
                 # print(f'timestamp {Parameters["TimestampID"]} marked at video {VideoID} of {Course}') # debug
-                DBShell.execute('INSERT INTO Timestamps VALUES (:TimestampID, :Course, :ChannelTitle, :Tags, :Link, :Title, :StartTimestamp, :EndTimestamp, :TimestampDescription)', Parameters) #values insertion in the table
+                DBShell.execute('INSERT INTO Timestamps VALUES (:TimestampID, :Course, :ChannelTitle, :Link, :Title, :StartTimestamp, :EndTimestamp, :TimestampDescription)', Parameters) #values insertion in the table
                 Database.commit() #database update
+            
+        print(OKText(f'{Course} ({PLID}) fetched'))
     Database.close() #closing connection of the database
     print(OKText('Timestamps table filled'))
 
 def Verify():
-    with open('Courses.joson') as Json:
+    with open('Courses.json') as Json:
         LocalCourses = load(Json)
     Query = "SELECT CourseName, PLID FROM Courses"
     Database = Connect('Data.db', detect_types = TimeStamps) # database file creation
