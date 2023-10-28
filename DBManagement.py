@@ -4,7 +4,6 @@ from hashlib import sha256 as SHA256
 from json import load
 from os import remove as Remove
 from os.path import exists as Exists
-from re import findall
 from re import finditer
 from sqlite3 import connect as Connect
 from sqlite3 import PARSE_DECLTYPES as TimeStamps
@@ -12,14 +11,15 @@ from sys import argv as Args
 
 DOCS =\
  """type
-'python DBManagement.py -c' or 'python DBManagement.py --create' to create the file of the database with all the timestamps (faster results)
+'python DBManagement.py -c' or 'python DBManagement.py --create' to create the file of the database with all the timestamps
 'python DBManagement.py -v' or 'python DBManagement.py --verify' to verify that that the database is up to date
+'python DBManagement.py -d' or 'python DBManagement.py --delete' to delete the database file
 """ # documentation
 
 APIKey = 'AIzaSyA-dlBUjVQeuc4a6ZN4RkNUYDFddrVLxrA' #API Key need to perform the research
 YoutubeAPI = Activate('youtube', 'v3', developerKey = APIKey) #activation of youtube service by youtube API Key
 Playlist = YoutubeAPI.playlistItems() #playlist of videos
-YoutubePrefix = 'https://www.youtube.com/watch?v='
+YoutubePrefix = 'https://youtu.be/'
 CompatibilityThreshold = 20
 
 def GetPlaylistID(url = ''): # extract the playlist id from the url
@@ -80,7 +80,7 @@ def GetVideoData(ID = ''): #this function get the video metadata given the video
 
     VideoMetaData =\
     {
-        'Link' : YoutubePrefix + ID + '&ab_channel=' + ChannelTitle,
+        'Link' : YoutubePrefix + ID,
         'ChannelTitle' : ChannelTitle,
         'Title' : Title, # title of the video (string)
         'Tags' : Tags,
@@ -189,6 +189,14 @@ def Verify():
         if not Course in CurrentCourses.keys() or not CurrentCourses[Course] == LocalCourses[Course]:
             NewCourses[Course] = LocalCourses[Course]
 
+def Delete():
+    if Exists('Data.db'):
+        deletion = input(WarningText('Do you want to delete the database?<y/n>'))[0].lower()
+        if deletion == 'y':
+            Remove('Data.db')
+            print(OKText('Data.db deleted, database is now non-existent'))
+        else:
+            print(OKText('Deletion cancelled, the database is untouched'))
 
 def SearchInDatabase(Queries = None): # this fucntion query in the database to find relevant result
     #print(f'searching {", ".join(Queries)} in the database')
@@ -230,5 +238,8 @@ if __name__ == '__main__':
         if any(['-c' in Args, '--create' in Args]):
             CreateDatabase()
 
-        if any(['-v' in Args, '--verify' in Args]):
+        elif any(['-v' in Args, '--verify' in Args]):
             Verify()
+
+        elif any([['-d' in Args, '--delete' in Args]]):
+            Delete()

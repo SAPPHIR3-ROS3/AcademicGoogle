@@ -27,7 +27,7 @@ def DisplayQuery(Data = None): # this function display the result in the proper 
                 for Match in Matches: # for loop for every result found in the database
                     print(f'\t[{Match["Course"]}] {Match["VideoTitle"]}') # playlist/origin
                     print(f'\t{Match["ChannelTitle"]}')
-                    print(Link(f'\t{Match["VideoLink"]}?t={ConvertTimeStamp(Match["StartTimestamp"])}&ab_channel={Match["ChannelTitle"]}')) # link of the youtube video
+                    print(Link(f'\t{Match["VideoLink"]}?t={ConvertTimeStamp(Match["StartTimestamp"])}')) # link of the youtube video
                     print('\t...') # spacing
                     print(OKText(f'\t[{Match["StartTimestamp"]}|{Match["EndTimestamp"]}] {Match["TimestampDescription"].replace("   ", " ")}')) # timestamp and description of result
                     print('\t...') # spacing
