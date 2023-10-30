@@ -19,8 +19,8 @@ DOCS =\
 APIKey = 'AIzaSyA-dlBUjVQeuc4a6ZN4RkNUYDFddrVLxrA' #API Key need to perform the research
 YoutubeAPI = Activate('youtube', 'v3', developerKey = APIKey) #activation of youtube service by youtube API Key
 Playlist = YoutubeAPI.playlistItems() #playlist of videos
-YoutubePrefix = 'https://youtu.be/'
-CompatibilityThreshold = 20
+YoutubePrefix = 'https://youtu.be/' # youtube short link prefix
+CompatibilityThreshold = 20 # if imcompatible part is greater then this the element will be conidered incompatible
 
 def GetPlaylistID(url = ''): # extract the playlist id from the url
     return url.replace('https://www.youtube.com/playlist?list=', '')
@@ -51,7 +51,7 @@ def GetPlaylistPages(PlaylistID = ''): # playlist pages retrieval
     return Pages
 
 def GetVideoIDs(PlaylistID = ''): #this function get youtube ids
-    Pages = GetPlaylistPages(PlaylistID)
+    Pages = GetPlaylistPages(PlaylistID) # get the page tonkes
     VideosID = []
     
     for Page in Pages: #loop for every page of results
@@ -67,12 +67,12 @@ def GetVideoData(ID = ''): #this function get the video metadata given the video
     Video = YoutubeAPI.videos().list(part = 'snippet, contentDetails', id = ID) #youtube API video obj
     Video = Video.execute()['items'][0] # video metadata
     Title = Video['snippet']['title'] #video title
-    ChannelTitle = Video['snippet']['channelTitle']
-    Tags = '\t'.join(Video['snippet']['tags'])
+    ChannelTitle = Video['snippet']['channelTitle'] # channel title
+    Tags = '\t'.join(Video['snippet']['tags']) # hashtags (unused for now)
     Duration = Video['contentDetails']['duration'][2 : - 1] #removing useless part of duration
     Duration = Duration.replace('H', ':').replace('M', ':') #formatting correctly the duration of timestamp
     Duration = ':'.join([Part if len(Part) > 1 else '0' + Part for Part in Duration.split(':')]) #setting proper length of timestamps segment
-    RawDescription = str(Video['snippet']['description'])
+    RawDescription = str(Video['snippet']['description']) # description
     Timestamps = r'(?=(\d{1,2}:\d{2}:\d{2}|\d{2}:\d{2})\s(.+)\n?(\d{1,2}:\d{2}:\d{2}|\d{2}:\d{2})?)' #regex to find start timestamp, argument and end timestamps
     Description = [[Group if not Group == None else Duration for Group in Line.groups()] for Line in finditer(Timestamps, RawDescription)]
     #formatting in a list properly the matches (timestamps and argument)
@@ -86,22 +86,60 @@ def GetVideoData(ID = ''): #this function get the video metadata given the video
         'Tags' : Tags,
         'Duration' :Duration, # duration HH:MM:SS (string)
         'Description' : Description # description (string : list of timestamps)(OrdDict)
-    }
+    } # video dictionary
 
     return VideoMetaData
 
-def HasTimestamps(VideoID = ''):
-    Video = GetVideoData(VideoID)
+def HasTimestamps(VideoID = ''): # this function check if the video has some timestamps
+    Video = GetVideoData(VideoID) # data acquisition
     return True if len(Video['Description']) > 1 else False
 
-def HowCompatible(PlaylistID = ''):
-    VideoIDs = GetVideoIDs(PlaylistID)
-    Playlist = [HasTimestamps(ID) for ID in VideoIDs]
+def HowCompatible(PlaylistID = ''): # this function calcultate the compatibility percentage
+    VideoIDs = GetVideoIDs(PlaylistID) # get the videos list
+    Playlist = [HasTimestamps(ID) for ID in VideoIDs] # check how many videos have timestamps
     
     return int(round(Playlist.count(True)/len(Playlist), 2) * 100)
 
-def CreateDatabase(): #this function create the database with timestamps from scratch
-    if Exists('Data.db'): Remove('Data.db')
+def CheckCoursesCompatibility(CoursesDictionary = dict()): # this function check and remove incompatible courses
+    for Course, PLID in CoursesDictionary.copy().items(): # loop to check the compatibility of every playlist 
+        print(OKText(f'Verifying {Course} ({PLID})'))
+        Compatibility = HowCompatible(PLID) # check the compatibility of the playlist
+        if Compatibility < (100 - CompatibilityThreshold): # check if the playlist doesn't surpass the compatibility threshold
+            print(WarningText('incompatible, it will be skipped'))
+            CoursesDictionary.pop(Course) # the playlist is considered not compatible enough therefore is removed 
+        else:
+            print(OKText(f'{Compatibility}% compatible'))
+
+    return CoursesDictionary
+
+def FetchPlaylist(Course, PLID): # this function insert the timestamps nel databases
+    Database = Connect('Data.db', detect_types = TimeStamps) # database file creation
+    DBShell = Database.cursor() # shell to run queries
+    VideoIDs = GetVideoIDs(PLID) # retraial of all videos id of a specified course(playlist)
+
+    for VideoID in VideoIDs: # for loop for every video lesson in playlist course
+        Video = GetVideoData(VideoID) # retriving video information
+
+        for Line in Video['Description']: # for loop for every timestamp in the video lesson
+            Parameters = dict() # parameters dictionary for the insertion query
+            Parameters['Link'] = Video['Link']
+            Parameters['Course'] = Course
+            Parameters['ChannelTitle'] = Video['ChannelTitle']
+            # Parameters['Tags'] = Video['Tags'] # not available at the moment (possible future implementation)
+            Parameters['Title'] = Video['Title']
+            Parameters['StartTimestamp'] = Line[1]
+            Parameters['EndTimestamp'] = Line[2]
+            Parameters['TimestampDescription'] = Line[0].replace(':',  '║').replace('-', ' ') # replacing "problematic" character
+            Parameters['TimestampID'] = SHA256(str(Video['Link']+Video['ChannelTitle']+Video['Title']+Line[1]+Line[2]+Line[0]).encode()).hexdigest() # creation of a unique sha256 as Primary Key of the table
+            # print(f'timestamp {Parameters["TimestampID"]} marked at video {VideoID} of {Course}') # debug
+            DBShell.execute('INSERT INTO Timestamps VALUES (:TimestampID, :Course, :ChannelTitle, :Link, :Title, :StartTimestamp, :EndTimestamp, :TimestampDescription)', Parameters) # values insertion in the table
+            Database.commit() # database update
+    
+    Database.close() # closing connection of the database
+    print(OKText(f'{Course} ({PLID}) fetched'))
+
+def CreateDatabase(): # this function create the database with timestamps from scratch
+    if Exists('Data.db'): Remove('Data.db') # when creating the database, the file might already exists so it's removed to avoid error
     Database = Connect('Data.db', detect_types = TimeStamps) # database file creation
     DBShell = Database.cursor() # shell to run queries
     DBShell.execute\
@@ -116,14 +154,7 @@ def CreateDatabase(): #this function create the database with timestamps from sc
 
     print(OKText('Courses table created'))
 
-    for Course, PLID in Courses.copy().items():
-        print(OKText(f'Verifying {Course} ({PLID})'))
-        Compatibility = HowCompatible(PLID)
-        if Compatibility < (100 - CompatibilityThreshold):
-            print(WarningText('incompatible, it will be skipped'))
-            Courses.pop(Course)
-        else:
-            print(OKText(f'{Compatibility}% compatible'))
+    Courses = CheckCoursesCompatibility(Course)
 
     for Course, PLID in Courses.items(): # loop for filling the courses table
         DBShell.execute('INSERT INTO Courses VALUES (:PLID, :CourseName)', {'PLID' : GetPlaylistID(PLID), 'CourseName' : Course}) #secured execution of the query to insert value from
@@ -151,49 +182,34 @@ def CreateDatabase(): #this function create the database with timestamps from sc
     Database.commit() #database update
 
     for Course, PLID in Courses.items(): # loop for every course in the courses dictionary
-        VideoIDs = GetVideoIDs(PLID) # retraial of all videos id of a specified course(playlist)
+        FetchPlaylist(Course, PLID)
 
-        for VideoID in VideoIDs: # for loop for every video lesson in playlist course
-            Video = GetVideoData(VideoID) # retriving video information
-
-            for Line in Video['Description']: # for loop for every timestamp in the video lesson
-                Parameters = dict() # parameters dictionary for the insertion query
-                Parameters['Link'] = Video['Link']
-                Parameters['Course'] = Course
-                Parameters['ChannelTitle'] = Video['ChannelTitle']
-                # Parameters['Tags'] = Video['Tags'] # not available at the moment (possible future implementation)
-                Parameters['Title'] = Video['Title']
-                Parameters['StartTimestamp'] = Line[1]
-                Parameters['EndTimestamp'] = Line[2]
-                Parameters['TimestampDescription'] = Line[0].replace(':',  '║').replace('-', ' ') # replacing "problematic" character
-                Parameters['TimestampID'] = SHA256(str(Video['Link']+Video['ChannelTitle']+Video['Title']+Line[1]+Line[2]+Line[0]).encode()).hexdigest() # creation of a unique sha256 as Primary Key of the table
-                # print(f'timestamp {Parameters["TimestampID"]} marked at video {VideoID} of {Course}') # debug
-                DBShell.execute('INSERT INTO Timestamps VALUES (:TimestampID, :Course, :ChannelTitle, :Link, :Title, :StartTimestamp, :EndTimestamp, :TimestampDescription)', Parameters) #values insertion in the table
-                Database.commit() #database update
-            
-        print(OKText(f'{Course} ({PLID}) fetched'))
-    Database.close() #closing connection of the database
     print(OKText('Timestamps table filled'))
 
-def Verify():
-    with open('Courses.json') as Json:
-        LocalCourses = load(Json)
-    Query = "SELECT CourseName, PLID FROM Courses"
+def Verify(): # this function verify that the database is up to date
+    with open('Courses.json') as Json: # open the json file with courses
+        LocalCourses = load(Json) # load the file as a json
+    Query = "SELECT CourseName, PLID FROM Courses" # query to find if the course has been fetched
     Database = Connect('Data.db', detect_types = TimeStamps) # database file creation
     DBShell = Database.cursor() # shell to run queries
-    DBShell.execute(Query)
-    CurrentCourses = {Match[0] : Match[1] for Match in DBShell.fetchall()}
-    NewCourses = dict()
+    DBShell.execute(Query) # query is executed
+    CurrentCourses = {Match[0] : Match[1] for Match in DBShell.fetchall()} # the courses in the database are fetched in the dictionary
+    NewCourses = dict() # courses in the local file but not in the database
 
-    for Course in LocalCourses:
-        if not Course in CurrentCourses.keys() or not CurrentCourses[Course] == LocalCourses[Course]:
-            NewCourses[Course] = LocalCourses[Course]
+    for Course in LocalCourses: # check if the local courses are the same of the database
+        if not Course in CurrentCourses.keys() or not CurrentCourses[Course] == LocalCourses[Course]: # check if there is the same name and same key in the database and iin the file
+            NewCourses[Course] = LocalCourses[Course] # the course is in the local gile but not in the database
 
-def Delete():
-    if Exists('Data.db'):
-        deletion = input(WarningText('Do you want to delete the database?<y/n>'))[0].lower()
-        if deletion == 'y':
-            Remove('Data.db')
+    NewCourses = CheckCoursesCompatibility(NewCourses) # remove incompatible playlist
+
+    for Course, PLID in NewCourses.items(): # loop for every course in the courses dictionary
+        FetchPlaylist(Course, PLID) # insert the timestamps of the playlist in the database
+
+def Delete(): # this function delete the database file to reset the program
+    if Exists('Data.db'): # check if the file exists
+        deletion = input(WarningText('Do you want to delete the database?<y/n>'))[0].lower() # ask for confirmation
+        if deletion == 'y': # deletion confimed
+            Remove('Data.db') # file is removed
             print(OKText('Data.db deleted, database is now non-existent'))
         else:
             print(OKText('Deletion cancelled, the database is untouched'))
@@ -229,17 +245,3 @@ def SearchInDatabase(Queries = None): # this fucntion query in the database to f
                 # dictionary of queries as keys and an ordered list of dictionaries which rappresents a match as values
 
             return Results
-
-if __name__ == '__main__':
-    if len(Args) == 1:
-        print(DOCS)
-
-    else:
-        if any(['-c' in Args, '--create' in Args]):
-            CreateDatabase()
-
-        elif any(['-v' in Args, '--verify' in Args]):
-            Verify()
-
-        elif any([['-d' in Args, '--delete' in Args]]):
-            Delete()
