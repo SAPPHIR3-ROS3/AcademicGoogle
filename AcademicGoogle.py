@@ -1,5 +1,7 @@
 from collections import OrderedDict as OrdDict
 from DBManagement import CreateDatabase
+from DBManagement import Verify
+from DBManagement import Delete
 from DBManagement import SearchInDatabase
 from googleapiclient.discovery import build as Activate
 from os.path import exists as Exists
@@ -22,6 +24,13 @@ Title =\
 ╚██████╔╝╚██████╔╝╚██████╔╝╚██████╔╝███████╗███████╗░░░░░░░░░░
 ░╚═════╝░░╚═════╝░░╚═════╝░░╚═════╝░╚══════╝╚══════╝░░░░░░░░░░ 
 
+"""
+HDOCS =\
+"""scrivi
+'--help' per vedere questo messaggio
+'--verify' per verificare o aggiornare il database
+'--delete' per eliminare il database (il database verrà ricreato al prosimo avvio)
+qualsiasi altra cosa verra cercata nel database locale se ci sono ',' verranno fatte più ricerche
 """
 
 CEnd = '\033[0m' # end of coloured text
@@ -66,14 +75,27 @@ def main(Research = ''): # program function
         CreateDatabase()
 
     if Research == '': # check if the program has been called before
-        UInput = input('Cerca: ')
+        UInput = input('Cerca(scrivi --help per aiuto): ')
     else: # if the program has been called before the new research is used as query
         UInput = Research
 
     if len(UInput) > 0: # check if the query is not empty
-        UInput = [Query[1 :] if Query.startswith(' ') else Query for Query in UInput.lower().split(',')] # fix the input
-        Matches = SearchInDatabase(list(set(UInput))) # search queries in the database
-        DisplayQuery(Matches) # displey the results the queries
+        if UInput == '--help':
+            print(HDOCS)
+            input('premi invio per continuare')
+            main()
+        elif UInput == '--verify':
+            Verify()
+            input('premi invio per continuare')
+            main()
+        elif UInput == '--delete':
+            Delete()
+            input('premi invio per chiudere')
+            quit()
+        else:
+            UInput = [Query[1 :] if Query.startswith(' ') else Query for Query in UInput.lower().split(',')] # fix the input
+            Matches = SearchInDatabase(list(set(UInput))) # search queries in the database
+            DisplayQuery(Matches) # displey the results the queries
 
     else: #if the query is empty
         print(ErrorText('nessun risultato, query vuota'))
