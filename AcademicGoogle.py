@@ -31,7 +31,7 @@ HDOCS =\
 '--verify' per verificare o aggiornare il database
 '--delete' per eliminare il database (il database verrà ricreato al prosimo avvio)
 qualsiasi altra cosa verra cercata nel database locale se ci sono ',' verranno fatte più ricerche
-"""
+""" # help documentation
 
 CEnd = '\033[0m' # end of coloured text
 ErrorText = lambda S: f'\33[31m{S}{CEnd}' # function for errors (red text)
@@ -53,7 +53,7 @@ def DisplayQuery(Data = None): # this function display the result in the proper 
                 print(Key, '\n') # print the searched query
                 for Match in Matches: # for loop for every result found in the database
                     print(f'\t[{Match["Course"]}] {Match["VideoTitle"]}') # playlist/origin
-                    print(f'\t{Match["ChannelTitle"]}')
+                    print(f'\t{Match["ChannelTitle"]}') # channel name
                     print(Link(f'\t{Match["VideoLink"]}?t={ConvertTimeStamp(Match["StartTimestamp"])}')) # link of the youtube video
                     print('\t...') # spacing
                     print(OKText(f'\t[{Match["StartTimestamp"]}|{Match["EndTimestamp"]}] {Match["TimestampDescription"].replace("   ", " ")}')) # timestamp and description of result
@@ -81,15 +81,15 @@ def main(Research = ''): # program function
 
     if len(UInput) > 0: # check if the query is not empty
         if UInput == '--help':
-            print(HDOCS)
+            print(HDOCS) #show the help docs
             input('premi invio per continuare')
-            main()
+            main() #program restart
         elif UInput == '--verify':
-            Verify()
+            Verify() # verify that the database is up to date
             input('premi invio per continuare')
-            main()
+            main() # program restart
         elif UInput == '--delete':
-            Delete()
+            Delete() # delete the database file
             input('premi invio per chiudere')
             quit()
         else:
@@ -105,7 +105,7 @@ def main(Research = ''): # program function
     if Research == '': # no new input
         quit() # program closes
     else:
-        Sleep(1)
+        Sleep(1) # give time to the user to "prepare"
         main(Research) # recursive call with next research
 
 if __name__ == '__main__':
