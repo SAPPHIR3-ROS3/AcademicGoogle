@@ -10,7 +10,7 @@ from sqlite3 import PARSE_DECLTYPES as TimeStamps
 from sys import argv as Args
 
 DOCS =\
- """type
+"""type
 'python DBManagement.py -c' or 'python DBManagement.py --create' to create the file of the database with all the timestamps
 'python DBManagement.py -v' or 'python DBManagement.py --verify' to verify that that the database is up to date
 'python DBManagement.py -d' or 'python DBManagement.py --delete' to delete the database file
