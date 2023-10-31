@@ -3,9 +3,12 @@
 /release/
 /__pycache__/
 /output/
+/dist/
+/build/
 Data.db
 *.log
 out*.txt
 *zip
 .DS_Store
 test*.*
+*.spec
