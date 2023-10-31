@@ -28,7 +28,12 @@ HDOCS =\
 '--help' per vedere questo messaggio
 '--verify' per verificare o aggiornare il database
 '--delete' per eliminare il database (il database verrà ricreato al prosimo avvio)
-qualsiasi altra cosa verra cercata nel database locale se ci sono ',' verranno fatte più ricerche
+
+* qualsiasi altra cosa verra cercata nel database locale se ci sono ',' verranno fatte più ricerche
+* ricorda di copiare e incollare il link nel browser
+
+* per aggiungere playlist basta modificare il file "Courses.json" e aggiungere una playlist nel
+formato {"nome playlist 1": "url playlist 1", ... ,"nome playlist n" : "url playlist n"}
 """ # help documentation
 
 CEnd = '\033[0m' # end of coloured text
