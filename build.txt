@@ -1,2 +1,2 @@
-pyinstaller --noconfirm --onefile --console --name "AcademicGoogle" --clean --log-level "INFO" --hidden-import "googleapiclient";
+pyinstaller --noconfirm --onefile --console --name "AcademicGoogle" --clean --log-level "INFO"  "./AcademicGoogle.py";
 rm -rf *.spec ./build ./dist
