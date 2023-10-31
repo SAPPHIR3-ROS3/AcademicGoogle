@@ -2,6 +2,7 @@
 /Env/
 /release/
 /__pycache__/
+/output/
 Data.db
 *.log
 out*.txt
