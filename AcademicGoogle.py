@@ -1,9 +1,7 @@
-from collections import OrderedDict as OrdDict
 from DBManagement import CreateDatabase
 from DBManagement import Verify
 from DBManagement import Delete
 from DBManagement import SearchInDatabase
-from googleapiclient.discovery import build as Activate
 from os.path import exists as Exists
 from time import sleep as Sleep
 
@@ -67,15 +65,18 @@ def DisplayQuery(Data = None): # this function display the result in the proper 
         print(ErrorText('Nessun risultato')) # 0 results
 
 def main(Research = ''): # program function
-    print(OKText(Title))
-
+    
     if not Exists('Data.db'): # check if the database file exists
         print(ErrorText('sembra che il database non sia presente nella cartella'))
         print(WarningText('il database verrà creato adesso l\'operazione potrebbe richiedere alcuni minuti'))
         CreateDatabase()
 
+    print(OKText(Title))
+
     if Research == '': # check if the program has been called before
         UInput = input('Cerca(scrivi --help per aiuto): ')
+
+        if UInput == '': quit()
     else: # if the program has been called before the new research is used as query
         UInput = Research
 
