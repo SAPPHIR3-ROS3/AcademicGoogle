@@ -1,1 +1,1 @@
-pyinstaller --noconfirm --onefile --console --name "AcademicGoogle" --clean --log-level "INFO"  ""
+pyinstaller --noconfirm --onefile --console --name "AcademicGoogle" --clean --log-level "INFO"  "./AcademicGoogle.py"; rm -rf *.spec ./build ./dist
