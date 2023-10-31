@@ -1,20 +1,18 @@
 from collections import OrderedDict as OrdDict
 from googleapiclient.discovery import build as Activate
 from hashlib import sha256 as SHA256
-from json import load
+from json import load as Load
+from json import dumps as Dumps
 from os import remove as Remove
 from os.path import exists as Exists
 from re import finditer
 from sqlite3 import connect as Connect
 from sqlite3 import PARSE_DECLTYPES as TimeStamps
-from sys import argv as Args
 
-DOCS =\
-"""type
-'python DBManagement.py -c' or 'python DBManagement.py --create' to create the file of the database with all the timestamps
-'python DBManagement.py -v' or 'python DBManagement.py --verify' to verify that that the database is up to date
-'python DBManagement.py -d' or 'python DBManagement.py --delete' to delete the database file
-""" # documentation
+CEnd = '\033[0m' # end of coloured text
+ErrorText = lambda S: f'\33[31m{S}{CEnd}' # function for errors (red text)
+WarningText = lambda S: f'\33[33m{S}{CEnd}' # function for warnings (yellow text)
+OKText = lambda S: f'\33[92m{S}{CEnd}' # function for success operations (green text)
 
 APIKey = 'AIzaSyA-dlBUjVQeuc4a6ZN4RkNUYDFddrVLxrA' #API Key need to perform the research
 YoutubeAPI = Activate('youtube', 'v3', developerKey = APIKey) #activation of youtube service by youtube API Key
@@ -25,13 +23,13 @@ CompatibilityThreshold = 20 # if imcompatible part is greater then this the elem
 def GetPlaylistID(url = ''): # extract the playlist id from the url
     return url.replace('https://www.youtube.com/playlist?list=', '')
 
-with open('Courses.json') as Json: # load the courses file
-    Courses = {course : GetPlaylistID(playlist) for course, playlist in load(Json).items()} # preloading the courses
+if not Exists('Courses.json'):
+    print(ErrorText('sembra che il file Courses.json non esista'))
+    print(WarningText('il file è necessario per la creazione del database, ne verrà creato uno con una playlist di default (può essere rimosso dopo)'))
+    with open('Courses.json', 'w') as JSON: JSON.write(Dumps({"Analisi Matematica I" : "PLAQopGWlIcyZlCmXWE_KvtMi57Mwbyf6C"}))
 
-CEnd = '\033[0m' # end of coloured text
-ErrorText = lambda S: f'\33[31m{S}{CEnd}' #function for errors (red text)
-WarningText = lambda S: f'\33[33m{S}{CEnd}' #function for warnings (yellow text)
-OKText = lambda S: f'\33[92m{S}{CEnd}' #function for success operations (green text)
+with open('Courses.json') as Json: # load the courses file
+    Courses = {course : GetPlaylistID(playlist) for course, playlist in Load(Json).items()} # preloading the courses
 
 def GetPlaylistPages(PlaylistID = ''): # playlist pages retrieval
     Pages = [None] #token IDs of the playlist pages
@@ -139,6 +137,7 @@ def FetchPlaylist(Course, PLID): # this function insert the timestamps nel datab
     print(OKText(f'{Course} ({PLID}) fetched'))
 
 def CreateDatabase(): # this function create the database with timestamps from scratch
+    global Courses
     if Exists('Data.db'): Remove('Data.db') # when creating the database, the file might already exists so it's removed to avoid error
     Database = Connect('Data.db', detect_types = TimeStamps) # database file creation
     DBShell = Database.cursor() # shell to run queries
@@ -154,7 +153,7 @@ def CreateDatabase(): # this function create the database with timestamps from s
 
     print(OKText('Courses table created'))
 
-    Courses = CheckCoursesCompatibility(Course)
+    Courses = CheckCoursesCompatibility(Courses)
 
     for Course, PLID in Courses.items(): # loop for filling the courses table
         DBShell.execute('INSERT INTO Courses VALUES (:PLID, :CourseName)', {'PLID' : GetPlaylistID(PLID), 'CourseName' : Course}) #secured execution of the query to insert value from
@@ -188,7 +187,7 @@ def CreateDatabase(): # this function create the database with timestamps from s
 
 def Verify(): # this function verify that the database is up to date
     with open('Courses.json') as Json: # open the json file with courses
-        LocalCourses = load(Json) # load the file as a json
+        LocalCourses = Load(Json) # load the file as a json
     Query = "SELECT CourseName, PLID FROM Courses" # query to find if the course has been fetched
     Database = Connect('Data.db', detect_types = TimeStamps) # database file creation
     DBShell = Database.cursor() # shell to run queries
